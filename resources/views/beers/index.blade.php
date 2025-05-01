@@ -1,57 +1,90 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- Sección de cervezas destacadas -->
-    <section class="py-16 px-8 bg-[#2E2E2E] shadow-xl rounded-lg mx-4 my-12">
-        <div class="max-w-7xl mx-auto text-center">
-            <h2 class="text-5xl font-bold text-[#FFD700] mb-8" data-aos="fade-up">Cervezas Destacadas</h2>
-            <p class="text-xl mb-12 text-[#CCCCCC]" data-aos="fade-up" data-aos-delay="200">
-                Explora nuestra selección de cervezas artesanales de diversas cervecerías.
+<div class="py-12 bg-[#2E2E2E]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Hero Section -->
+        <div class="mb-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#FFD700] mb-4" data-aos="fade-up">Todas las Cervezas</h1>
+            <p class="text-xl text-[#CCCCCC] mb-8" data-aos="fade-up" data-aos-delay="200">
+                Explora nuestra colección completa de cervezas artesanales de las mejores cervecerías
             </p>
+            
+            <!-- Search and Filter -->
+            <div class="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8" data-aos="fade-up" data-aos-delay="300">
+                <form action="{{ route('beers.index') }}" method="GET" class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full max-w-3xl">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre..." class="px-4 py-2 rounded-md bg-[#3A3A3A] border border-gray-700 text-white focus:border-[#FFD700] focus:outline-none flex-grow">
+                    
+                    <select name="category" class="px-4 py-2 rounded-md bg-[#3A3A3A] border border-gray-700 text-white focus:border-[#FFD700] focus:outline-none">
+                        <option value="">Todas las categorías</option>
+                        @foreach(\App\Models\BeerCategory::all() as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    
+                    <button type="submit" class="px-4 py-2 bg-[#FFD700] text-[#2E2E2E] rounded-md hover:bg-[#FFA500] transition duration-300">
+                        Filtrar
+                    </button>
+                </form>
+            </div>
+        </div>
 
-            <!-- Slider de cervezas -->
-            <div class="swiper-container mb-10">
-                <div class="swiper-wrapper">
-                    @foreach($beers as $beer)
-                        <div class="swiper-slide">
-                            <div class="bg-[#3A3A3A] p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-110" data-aos="fade-up">
-                                <img src="{{ $beer->image }}" alt="{{ $beer->name }}" class="w-full h-48 object-cover rounded-lg mb-4">
-                                <h3 class="text-2xl font-semibold text-[#FFD700] mb-4">{{ $beer->name }}</h3>
-                                <p class="text-[#CCCCCC]">{{ \Str::limit($beer->description, 100) }}</p>
-                                <a href="{{ route('beers.show', $beer->id) }}" class="text-[#FFD700] hover:text-[#FFA500] mt-4 inline-block">Ver más</a>
+        <!-- Beer Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            @forelse($beers as $beer)
+                <div class="bg-[#3A3A3A] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
+                    <a href="{{ route('beers.show', $beer->id) }}">
+                        <img src="{{ $beer->image_url ?? 'https://cdn.homebrewersassociation.org/wp-content/uploads/irish-red-ale-_1440-900x600.jpg' }}" 
+                             alt="{{ $beer->name }}" 
+                             class="w-full h-48 object-cover">
+                        
+                        <div class="p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-xl font-bold text-[#FFD700] truncate">{{ $beer->name }}</h3>
+                                <span class="bg-[#2E2E2E] text-[#CCCCCC] text-xs px-2 py-1 rounded-full">{{ $beer->abv }}% ABV</span>
+                            </div>
+                            
+                            <p class="text-[#CCCCCC] text-sm mb-3 line-clamp-2">{{ $beer->description }}</p>
+                            
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-sm text-white bg-[#2E2E2E] px-2 py-1 rounded">{{ $beer->category->name ?? 'Sin categoría' }}</span>
+                                
+                                <span class="text-sm text-white">
+                                    @if($beer->brewery)
+                                        {{ $beer->brewery->name }}
+                                    @else
+                                        Cervecería desconocida
+                                    @endif
+                                </span>
                             </div>
                         </div>
-                    @endforeach
+                    </a>
                 </div>
-                <!-- Agrega los controles del slider (opcional) -->
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
-            </div>
-
+            @empty
+                <div class="col-span-full text-center py-12">
+                    <p class="text-xl text-[#CCCCCC]">No se encontraron cervezas que coincidan con tu búsqueda.</p>
+                    <a href="{{ route('beers.index') }}" class="mt-4 inline-block px-6 py-2 bg-[#FFD700] text-[#2E2E2E] rounded-md hover:bg-[#FFA500] transition duration-300">
+                        Ver todas las cervezas
+                    </a>
+                </div>
+            @endforelse
         </div>
-    </section>
-@endsection
+        
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center" data-aos="fade-up">
+            {{ $beers->links() }}
+        </div>
+    </div>
+</div>
 
-@section('scripts')
-    <!-- Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
-    <script>
-        // Inicializar el slider (Swiper)
-        var swiper = new Swiper('.swiper-container', {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            breakpoints: {
-                640: {
-                    slidesPerView: 2,
-                },
-                1024: {
-                    slidesPerView: 3,
-                },
-            },
-        });
-    </script>
+<!-- Scripts para animaciones AOS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 800,
+        once: true
+    });
+</script>
 @endsection

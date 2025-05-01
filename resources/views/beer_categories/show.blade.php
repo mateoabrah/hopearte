@@ -45,7 +45,7 @@
 
             <!-- Botón para volver -->
             <div class="text-center mt-8">
-                <a href="{{ route('beer_categories.index') }}" class="bg-[#FFD700] hover:bg-[#FFA500] text-white py-2 px-6 rounded-full text-lg transition-all duration-300 ease-in-out">
+                <a href="{{ route('beer_categories.index') }}" class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] py-2 px-6 rounded-full text-lg transition-all duration-300 ease-in-out">
                     Volver a las categorías
                 </a>
             </div>

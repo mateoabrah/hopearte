@@ -8,10 +8,42 @@ use Illuminate\Http\Request;
 class BeerController extends Controller
 {
     // Mostrar todas las cervezas
-    public function index()
+    public function index(Request $request)
     {
-        $beers = Beer::all();
-        return view('welcome', compact('beers')); // Pasar las cervezas a la vista
+        $query = Beer::with('category');
+        
+        // Intentamos cargar la relación brewery de forma segura
+        try {
+            $query->with('brewery');
+        } catch (\Exception $e) {
+            // Solo registramos el error pero continuamos
+            \Log::error('Error cargando relación brewery: ' . $e->getMessage());
+        }
+        
+        // Búsqueda por texto (nombre o descripción)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Filtro por categoría
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Ordenar (opcional)
+        $query->orderBy('name', 'asc');
+        
+        // Obtener resultados paginados
+        $beers = $query->paginate(12)->withQueryString();
+        
+        // Obtener todas las categorías para el selector
+        $categories = \App\Models\BeerCategory::orderBy('name')->get();
+        
+        return view('beers.index', compact('beers', 'categories'));
     }
 
     // Mostrar una cerveza específica

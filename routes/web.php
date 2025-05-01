@@ -5,10 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BreweryController;
 use App\Http\Controllers\BeerController;
 use App\Http\Controllers\BeerCategoryController;
+use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\BeerFavoriteController;
+use App\Http\Controllers\BreweryFavoriteController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Ruta principal
+Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -20,20 +23,26 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Crear rutas para las cervecerías
+// Rutas existentes para las cervezas, categorías, etc.
+Route::resource('beers', BeerController::class);
 Route::resource('breweries', BreweryController::class);
-
-// Rutas para cervezas
-Route::get('/beers', [BeerController::class, 'index'])->name('beers.index');
-Route::get('/beers/create', [BeerController::class, 'create'])->name('beers.create');
-Route::post('/beers', [BeerController::class, 'store'])->name('beers.store');
-Route::get('/beers/{id}', [BeerController::class, 'show'])->name('beers.show');
-
-
-
 Route::resource('beer_categories', BeerCategoryController::class);
-Route::get('/beer_categories/{category}', [BeerCategoryController::class, 'show'])->name('beer_categories.show');
 
+// Ruta para favoritos del usuario
+Route::get('/user/favorites', [UserController::class, 'favorites'])->name('user.favorites');
 
+// Rutas para cervezas favoritas y cervecerías favoritas (con middleware auth aplicado directamente)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/beer-favorites', [BeerFavoriteController::class, 'index'])->name('user.beer_favorites');
+    Route::post('/beer-favorites', [BeerFavoriteController::class, 'store'])->name('beer_favorites.store');
+    Route::delete('/beer-favorites/{beerId}', [BeerFavoriteController::class, 'destroy'])->name('beer_favorites.destroy');
+    Route::post('/beer-favorites/toggle', [BeerFavoriteController::class, 'toggle'])->name('beer_favorites.toggle');
+    
+    Route::get('/user/brewery-favorites', [BreweryFavoriteController::class, 'index'])->name('user.brewery_favorites');
+    Route::post('/brewery-favorites', [BreweryFavoriteController::class, 'store'])->name('brewery_favorites.store');
+    Route::delete('/brewery-favorites/{breweryId}', [BreweryFavoriteController::class, 'destroy'])->name('brewery_favorites.destroy');
+    Route::post('/brewery-favorites/toggle', [BreweryFavoriteController::class, 'toggle'])->name('brewery_favorites.toggle');
+});
 
+// Rutas de autenticación
 require __DIR__ . '/auth.php';

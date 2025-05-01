@@ -12,12 +12,28 @@ class Beer extends Model
     protected $fillable = [
         'name',
         'description',
-        'alcohol_percentage',
-        'image', // si quieres permitir que se suban imágenes
+        'abv',
+        'ibu',
+        'image_url',
+        'beer_category_id',
+        'brewery_id', // Asegúrate de que este campo esté aquí
     ];
 
+    // Relación con la categoría
     public function category()
     {
-        return $this->belongsTo(BeerCategory::class, 'category_id');
+        return $this->belongsTo(\App\Models\BeerCategory::class, 'category_id');
+    }
+
+    // Relación con la cervecería (añade esto)
+    public function brewery()
+    {
+        return $this->belongsTo(Brewery::class, 'brewery_id');
+    }
+
+    // Añadir dentro de la clase Beer
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'beer_favorites', 'beer_id', 'user_id')->withTimestamps();
     }
 }

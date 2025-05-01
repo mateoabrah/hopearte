@@ -63,7 +63,7 @@
                         <p class="text-[#CCCCCC] text-sm mb-2"><strong>Email:</strong> <a href="mailto:{{ $brewery->email }}" class="text-[#FFD700]">{{ $brewery->email }}</a></p>
                         <p class="text-[#CCCCCC] text-sm mb-4"><strong>Website:</strong> <a href="{{ $brewery->website }}" target="_blank" class="text-[#FFD700]">{{ $brewery->website }}</a></p>
 
-                        <a href="{{ route('breweries.show', $brewery->id) }}" class="bg-[#FFD700] hover:bg-[#FFA500] text-white py-2 px-6 rounded-full text-lg transition-all duration-300 ease-in-out">
+                        <a href="{{ route('breweries.show', $brewery->id) }}" class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] py-2 px-6 rounded-full text-lg transition-all duration-300 ease-in-out">
                             Ver más
                         </a>
                     </div>

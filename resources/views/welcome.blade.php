@@ -30,40 +30,34 @@
     <nav
         class="bg-[#1A1A1A] text-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg transition-all duration-300 ease-in-out">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{{ route('beers.index') }}"
-                class="text-2xl font-bold text-[#FFD700] hover:text-[#FAC843] transition-all duration-300 ease-in-out">Hopearte</a>
-            <ul class="flex space-x-6">
-                <li><a href="{{ route('beers.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Inicio</a></li>
-                <li><a href="{{ route('beer_categories.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Categorías</a></li>
-                <li><a href="{{ route('breweries.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Cervecerías</a>
-                </li>
-
-            </ul>
+            <a href="{{ route('welcome') }}"
+                class="text-2xl font-bold text-[#FFD700] hover:text-[#FAC843] transition-all duration-300 ease-in-out">
+                Hopearte
+            </a>
+            <div class="flex items-center">
+                <ul class="flex space-x-6 mr-6">
+                    <li><a href="{{ route('welcome') }}"
+                            class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Inicio</a></li>
+                    <li><a href="{{ route('beer_categories.index') }}"
+                            class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Categorías</a></li>
+                    <li><a href="{{ route('breweries.index') }}"
+                            class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Cervecerías</a>
+                    </li>
+                </ul>
+                <div class="flex space-x-2">
+                    <a href="{{ route('login') }}"
+                        class="text-sm border border-[#FFD700] text-[#FFD700] hover:bg-[#FFD700] hover:text-[#2E2E2E] py-1 px-3 rounded-full transition-all duration-300 ease-in-out">
+                        Iniciar sesión
+                    </a>
+                    <a href="{{ route('register') }}"
+                        class="text-sm bg-[#2E2E2E] border border-[#CCCCCC] text-[#CCCCCC] hover:bg-[#3A3A3A] py-1 px-3 rounded-full transition-all duration-300 ease-in-out">
+                        Registrarse
+                    </a>
+                </div>
+            </div>
         </div>
-    </nav> 
+    </nav>
 
-
-    <!-- Navbar fixed -->
-    <!-- <nav
-        class="bg-[#1A1A1A] text-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg transition-all duration-300 ease-in-out">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{{ route('beers.index') }}"
-                class="text-2xl font-bold text-[#FFD700] hover:text-[#FAC843] transition-all duration-300 ease-in-out">Hopearte</a>
-            <ul class="flex space-x-6">
-                <li><a href="{{ route('breweries.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Cervecerías</a>
-                </li>
-                <li><a href="{{ route('beers.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Cerveza
-                        Exclusiva</a></li>
-                <li><a href="{{ route('beer_categories.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Categorías</a></li>
-            </ul>
-        </div>
-    </nav> -->
 
     <!-- Mobile Menu Button -->
     <div class="lg:hidden flex items-center space-x-4">
@@ -78,10 +72,15 @@
     <!-- Mobile Menu (hidden by default) -->
     <div class="lg:hidden absolute top-0 left-0 w-full bg-[#1A1A1A] text-white p-6 space-y-4 hidden">
         <ul class="flex flex-col space-y-4">
+            <li><a href="{{ route('welcome') }}" class="hover:text-[#FFD700]">Inicio</a></li>
             <li><a href="{{ route('breweries.index') }}" class="hover:text-[#FFD700]">Cervecerías</a></li>
             <li><a href="{{ route('beers.index') }}" class="hover:text-[#FFD700]">Cerveza Exclusiva</a></li>
             <li><a href="{{ route('beer_categories.index') }}" class="hover:text-[#FFD700]">Categorías</a></li>
         </ul>
+        <div class="flex flex-col space-y-2 pt-2 border-t border-gray-700">
+            <a href="{{ route('login') }}" class="text-sm text-[#FFD700] hover:underline">Iniciar sesión</a>
+            <a href="{{ route('register') }}" class="text-sm text-[#CCCCCC] hover:underline">Registrarse</a>
+        </div>
     </div>
 
 
@@ -95,18 +94,6 @@
             <p class="text-3xl mb-10 text-[#CCCCCC]">Conéctate y descubre nuevas cervezas artesanales en nuestra
                 plataforma única.</p>
 
-            <!-- Botones de inicio de sesión y registro -->
-            <div class="flex justify-center space-x-4 mb-6">
-                <a href="{{ route('login') }}"
-                    class="bg-[#FFD700] hover:bg-[#FFA500] text-white py-3 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105">
-                    Iniciar sesión
-                </a>
-                <a href="{{ route('register') }}"
-                    class="bg-[#FFA500] hover:bg-[#FF8C00] text-white py-3 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105">
-                    Registrarse
-                </a>
-            </div>
-
             <a href="{{ route('breweries.index') }}"
                 class="bg-[#FFA500] hover:bg-[#FF8C00] text-white py-4 px-10 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105">
                 Explora Cervecerías
@@ -116,7 +103,7 @@
 
 
     <!-- <div class="breadcrumb py-4 text-[#CCCCCC]">
-        <a href="{{ route('beers.index') }}" class="hover:text-[#FFD700]">Inicio</a> /
+        <a href="{{ route('welcome') }}" class="hover:text-[#FFD700]">Inicio</a> /
         <a href="{{ route('breweries.index') }}" class="hover:text-[#FFD700]">Cervecerías</a> /
         <span class="text-[#FFD700]">Cerveza Exclusiva</span>
     </div> -->
@@ -159,7 +146,7 @@
 
             <!-- Botón para ir a categorías de cervezas -->
             <a href="{{ route('beer_categories.index') }}"
-                class="bg-[#FFD700] hover:bg-[#FFA500] text-black font-semibold py-3 px-6 rounded-full text-lg mb-8 inline-block transition-all duration-300 ease-in-out"
+                class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] font-semibold py-3 px-6 rounded-full text-lg mb-8 inline-block transition-all duration-300 ease-in-out"
                 data-aos="fade-up" data-aos-delay="400">
                 Ver Categorías de Cerveza
             </a>

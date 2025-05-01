@@ -45,4 +45,24 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function beerFavorites()
+    {
+        return $this->hasMany(BeerFavorite::class);
+    }
+
+    public function breweryFavorites()
+    {
+        return $this->hasMany(BreweryFavorite::class);
+    }
+
+    public function favoritedBeers()
+    {
+        return $this->belongsToMany(Beer::class, 'beer_favorites', 'user_id', 'beer_id')->withTimestamps();
+    }
+
+    public function favoritedBreweries()
+    {
+        return $this->belongsToMany(Brewery::class, 'brewery_favorites', 'user_id', 'brewery_id')->withTimestamps();
+    }
 }
