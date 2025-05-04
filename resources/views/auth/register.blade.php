@@ -50,6 +50,16 @@
                 @enderror
             </div>
 
+            <!-- Account Type -->
+            <div class="mt-4">
+                <x-input-label for="role" :value="__('Tipo de cuenta')" />
+                <select id="role" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" name="role" required>
+                    <option value="user">Usuario normal</option>
+                    <option value="company">Empresa cervecera</option>
+                </select>
+                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+            </div>
+
             <div class="flex items-center justify-between">
                 <a class="text-sm text-[#FFD700] hover:text-[#FFA500]" href="{{ route('login') }}">
                     ¿Ya tienes una cuenta?

@@ -4,135 +4,146 @@ namespace App\Http\Controllers;
 
 use App\Models\Brewery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class BreweryController extends Controller
 {
+    /**
+     * Mostrar lista de cervecerías públicas
+     */
     public function index()
     {
-        // Obtener todas las cervecerías
-        $breweries = Brewery::all();
-
-        // Pasar las cervecerías a la vista
+        $breweries = Brewery::with('beers')->latest()->paginate(12);
         return view('breweries.index', compact('breweries'));
     }
 
-    public function show($id)
+    /**
+     * Mostrar una cervecería específica
+     */
+    public function show(Brewery $brewery)
     {
-        // Obtener la cervecería por su ID
-        $brewery = Brewery::findOrFail($id);
-
-        // Pasar la cervecería a la vista
-        return view('breweries.show', compact('brewery'));
+        $beers = $brewery->beers()->paginate(8);
+        return view('breweries.show', compact('brewery', 'beers'));
     }
 
+    /**
+     * Mostrar las cervecerías del usuario actual (solo empresas)
+     */
+    public function myBreweries()
+    {
+        $breweries = Auth::user()->breweries()->with('beers')->latest()->paginate(10);
+        return view('breweries.my_breweries', compact('breweries'));
+    }
+
+    /**
+     * Mostrar formulario para crear cervecería
+     */
     public function create()
     {
+        // Añade un log para verificar que se está ejecutando
+        \Log::info('Método create() del BreweryController llamado');
+        
         return view('breweries.create');
     }
 
+    /**
+     * Almacenar nueva cervecería
+     */
     public function store(Request $request)
     {
-        // Validar la solicitud
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'address' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:15',
-            'email' => 'nullable|string|email|max:255',
+            'description' => 'required|string',
+            'city' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'founded_year' => 'nullable|integer|min:1800|max:' . date('Y'),
             'website' => 'nullable|url|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Validación para la imagen
+            'visitable' => 'sometimes|boolean',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        // Subir la imagen si existe
-        $imagePath = null;
+        // Manejar la carga de imagen
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('breweries', 'public'); // Guarda en la carpeta 'storage/app/public/breweries'
+            $validated['image'] = $request->file('image')->store('breweries', 'public');
         }
 
-        // Crear la cervecería
-        $brewery = Brewery::create([
-            'user_id' => auth()->id(), // Asumiendo que el usuario está autenticado
-            'name' => $request->name,
-            'description' => $request->description,
-            'address' => $request->address,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
-            'website' => $request->website,
-            'image' => $imagePath, // Guardar la ruta de la imagen
-        ]);
+        // Asignar el usuario actual como propietario
+        $validated['user_id'] = Auth::id();
 
-        // Redirigir a la lista de cervecerías o a la página de la cervecería recién creada
-        return redirect()->route('breweries.index');
+        // Crear la cervecería
+        $brewery = Brewery::create($validated);
+
+        return redirect()->route('my_breweries')
+            ->with('success', 'Cervecería creada exitosamente');
     }
 
-    public function edit($id)
+    /**
+     * Mostrar formulario para editar cervecería
+     */
+    public function edit(Brewery $brewery)
     {
-        // Obtener la cervecería para editarla
-        $brewery = Brewery::findOrFail($id);
+        // Verificar que el usuario es el propietario o admin
+        $this->authorize('update', $brewery);
 
-        // Pasar la cervecería a la vista de edición
         return view('breweries.edit', compact('brewery'));
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Actualizar cervecería
+     */
+    public function update(Request $request, Brewery $brewery)
     {
-        // Validar la solicitud
-        $request->validate([
+        // Verificar que el usuario es el propietario o admin
+        $this->authorize('update', $brewery);
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'address' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:15',
-            'email' => 'nullable|string|email|max:255',
+            'description' => 'required|string',
+            'city' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'founded_year' => 'nullable|integer|min:1800|max:' . date('Y'),
             'website' => 'nullable|url|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'visitable' => 'sometimes|boolean',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        // Obtener la cervecería
-        $brewery = Brewery::findOrFail($id);
-
-        // Subir la nueva imagen si se proporciona
+        // Manejar la carga de imagen
         if ($request->hasFile('image')) {
-            // Eliminar la imagen antigua si existe
+            // Eliminar imagen anterior si existe
             if ($brewery->image) {
                 Storage::disk('public')->delete($brewery->image);
             }
-
-            // Subir la nueva imagen
-            $imagePath = $request->file('image')->store('breweries', 'public');
-        } else {
-            $imagePath = $brewery->image; // Mantener la imagen actual si no se proporciona una nueva
+            $validated['image'] = $request->file('image')->store('breweries', 'public');
         }
 
-        // Actualizar los datos de la cervecería
-        $brewery->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'address' => $request->address,
-            'phone_number' => $request->phone_number,
-            'email' => $request->email,
-            'website' => $request->website,
-            'image' => $imagePath, // Actualizar la imagen
-        ]);
+        // Actualizar la cervecería
+        $brewery->update($validated);
 
-        // Redirigir a la vista de la cervecería actualizada
-        return redirect()->route('breweries.show', $brewery->id);
+        return redirect()->route('my_breweries')
+            ->with('success', 'Cervecería actualizada exitosamente');
     }
 
-    public function destroy($id)
+    /**
+     * Eliminar cervecería (solo para administradores)
+     */
+    public function destroy(Brewery $brewery)
     {
-        // Obtener la cervecería
-        $brewery = Brewery::findOrFail($id);
+        // Verificar que el usuario es un administrador
+        $this->authorize('delete', $brewery);
 
-        // Eliminar la imagen si existe
+        // Eliminar imagen si existe
         if ($brewery->image) {
             Storage::disk('public')->delete($brewery->image);
         }
 
-        // Eliminar la cervecería
         $brewery->delete();
 
-        // Redirigir al listado de cervecerías
-        return redirect()->route('breweries.index');
+        return redirect()->route('breweries.index')
+            ->with('success', 'Cervecería eliminada exitosamente');
     }
 }

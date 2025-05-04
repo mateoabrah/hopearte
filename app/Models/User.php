@@ -2,31 +2,32 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role', // Añadimos role a los campos asignables en masa
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -34,35 +35,64 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Determina si el usuario es administrador.
+     *
+     * @return bool
+     */
+    public function getIsAdminAttribute()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->role === 'admin';
     }
 
-    public function beerFavorites()
+    /**
+     * Determina si el usuario es una empresa.
+     *
+     * @return bool
+     */
+    public function getIsCompanyAttribute()
     {
-        return $this->hasMany(BeerFavorite::class);
+        return $this->role === 'company';
     }
 
-    public function breweryFavorites()
+    /**
+     * Relación con las cervecerías que son propiedad de este usuario (solo para empresas).
+     */
+    public function breweries()
     {
-        return $this->hasMany(BreweryFavorite::class);
+        return $this->hasMany(Brewery::class);
     }
 
-    public function favoritedBeers()
-    {
-        return $this->belongsToMany(Beer::class, 'beer_favorites', 'user_id', 'beer_id')->withTimestamps();
-    }
-
+    /**
+     * Relación con las cervecerías favoritas del usuario.
+     */
     public function favoritedBreweries()
     {
-        return $this->belongsToMany(Brewery::class, 'brewery_favorites', 'user_id', 'brewery_id')->withTimestamps();
+        return $this->belongsToMany(Brewery::class, 'brewery_favorites');
+    }
+
+    /**
+     * Relación con las cervezas favoritas del usuario.
+     */
+    public function favoritedBeers()
+    {
+        return $this->belongsToMany(Beer::class, 'beer_favorites');
+    }
+
+    /**
+     * Relación con las reseñas escritas por el usuario.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

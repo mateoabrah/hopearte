@@ -10,30 +10,64 @@ class Beer extends Model
     use HasFactory;
 
     protected $fillable = [
+        'brewery_id',
+        'beer_category_id',
         'name',
         'description',
         'abv',
         'ibu',
-        'image_url',
-        'beer_category_id',
-        'brewery_id', // Asegúrate de que este campo esté aquí
+        'color',
+        'image',
+        'first_brewed',
+        'seasonal',
     ];
 
-    // Relación con la categoría
-    public function category()
-    {
-        return $this->belongsTo(\App\Models\BeerCategory::class, 'category_id');
-    }
+    protected $casts = [
+        'abv' => 'decimal:2',
+        'ibu' => 'decimal:2',
+        'first_brewed' => 'integer',
+        'seasonal' => 'boolean',
+    ];
 
-    // Relación con la cervecería (añade esto)
     public function brewery()
     {
-        return $this->belongsTo(Brewery::class, 'brewery_id');
+        return $this->belongsTo(Brewery::class);
     }
 
-    // Añadir dentro de la clase Beer
+    /**
+     * Relación con la categoría de cerveza
+     */
+    public function category()
+    {
+        return $this->belongsTo(BeerCategory::class, 'beer_category_id');
+    }
+
+    /**
+     * Relación muchos a muchos con cervecerías
+     */
+    public function breweries()
+    {
+        return $this->belongsToMany(Brewery::class, 'brewery_beer');
+    }
+
     public function favoritedBy()
     {
-        return $this->belongsToMany(User::class, 'beer_favorites', 'beer_id', 'user_id')->withTimestamps();
+        return $this->belongsToMany(User::class, 'beer_favorites');
+    }
+    
+    /**
+     * Obtener todas las reseñas de esta cerveza
+     */
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+    
+    /**
+     * Calcular la calificación promedio
+     */
+    public function getAverageRatingAttribute()
+    {
+        return $this->reviews()->avg('rating') ?: 0;
     }
 }

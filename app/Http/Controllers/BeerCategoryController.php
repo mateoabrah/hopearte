@@ -7,57 +7,79 @@ use Illuminate\Http\Request;
 
 class BeerCategoryController extends Controller
 {
+    /**
+     * Mostrar lista de categorías de cerveza
+     */
     public function index()
     {
-        // Obtener todas las categorías
-        $categories = BeerCategory::all();
+        $categories = BeerCategory::withCount('beers')->get();
+        
         return view('beer_categories.index', compact('categories'));
     }
 
-    public function show(BeerCategory $beer_category)
-    {
-        // Obtener todas las cervezas asociadas a la categoría
-        $beers = $beer_category->beers;
-
-        // Pasar las cervezas junto con la categoría a la vista
-        return view('beer_categories.show', compact('beer_category', 'beers'));
-    }
-
+    /**
+     * Mostrar el formulario para crear una nueva categoría
+     */
     public function create()
     {
         return view('beer_categories.create');
     }
 
+    /**
+     * Almacenar una nueva categoría
+     */
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
         ]);
-
-        BeerCategory::create($request->all());
+        
+        $category = BeerCategory::create($validated);
+        
         return redirect()->route('beer_categories.index')->with('success', 'Categoría creada exitosamente.');
     }
 
-    public function edit(BeerCategory $beer_category)
+    /**
+     * Mostrar una categoría específica
+     */
+    public function show(BeerCategory $beerCategory)
     {
-        return view('beer_categories.edit', compact('beer_category'));
+        $beers = $beerCategory->beers()->with('brewery')->paginate(12);
+        
+        return view('beer_categories.show', compact('beerCategory', 'beers'));
     }
 
-    public function update(Request $request, BeerCategory $beer_category)
+    /**
+     * Mostrar el formulario para editar una categoría
+     */
+    public function edit(BeerCategory $beerCategory)
     {
-        $request->validate([
+        return view('beer_categories.edit', compact('beerCategory'));
+    }
+
+    /**
+     * Actualizar una categoría específica
+     */
+    public function update(Request $request, BeerCategory $beerCategory)
+    {
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'required|string',
         ]);
-
-        $beer_category->update($request->all());
-        return redirect()->route('beer_categories.index')->with('success', 'Categoría actualizada.');
+        
+        $beerCategory->update($validated);
+        
+        return redirect()->route('beer_categories.index')->with('success', 'Categoría actualizada exitosamente.');
     }
 
-    public function destroy(BeerCategory $beer_category)
+    /**
+     * Eliminar una categoría
+     */
+    public function destroy(BeerCategory $beerCategory)
     {
-        $beer_category->delete();
-        return redirect()->route('beer_categories.index')->with('success', 'Categoría eliminada.');
+        $beerCategory->delete();
+        
+        return redirect()->route('beer_categories.index')->with('success', 'Categoría eliminada exitosamente.');
     }
 }

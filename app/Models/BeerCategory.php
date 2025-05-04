@@ -9,11 +9,14 @@ class BeerCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = [
+        'name',
+        'description',
+        'image',
+    ];
 
-    // Relación con el modelo Beer
     public function beers()
     {
-        return $this->hasMany(Beer::class, 'category_id');
+        return $this->hasMany(Beer::class);
     }
 }

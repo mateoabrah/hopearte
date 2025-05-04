@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('beer_categories', function (Blueprint $table) {
+        Schema::create('brewery_beer', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('image')->nullable();
+            $table->foreignId('brewery_id')->constrained()->onDelete('cascade');
+            $table->foreignId('beer_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+
+            // Opcionalmente puedes agregar una restricción de unicidad
+            $table->unique(['brewery_id', 'beer_id']);
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('beer_categories');
+        Schema::dropIfExists('brewery_beer');
     }
 };

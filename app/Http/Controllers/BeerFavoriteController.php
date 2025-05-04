@@ -3,79 +3,76 @@
 namespace App\Http\Controllers;
 
 use App\Models\Beer;
-use App\Models\BeerFavorite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BeerFavoriteController extends Controller
 {
     /**
-     * Mostrar la lista de cervezas favoritas del usuario.
+     * Constructor: requiere autenticación
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Ver cervezas favoritas del usuario
      */
     public function index()
     {
-        $favorites = Auth::user()->favoritedBeers()->paginate(12);
+        $user = Auth::user();
+        $favorites = $user->favoritedBeers()->with(['brewery', 'category'])->paginate(12);
+        
         return view('user.beer_favorites', compact('favorites'));
     }
 
     /**
-     * Añadir una cerveza a favoritos.
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'beer_id' => 'required|exists:beers,id',
-        ]);
-
-        BeerFavorite::firstOrCreate([
-            'user_id' => Auth::id(),
-            'beer_id' => $validated['beer_id'],
-        ]);
-
-        return back()->with('success', 'Cerveza añadida a favoritos.');
-    }
-
-    /**
-     * Eliminar una cerveza de favoritos.
-     */
-    public function destroy($beerId)
-    {
-        BeerFavorite::where('user_id', Auth::id())
-            ->where('beer_id', $beerId)
-            ->delete();
-
-        return back()->with('success', 'Cerveza eliminada de favoritos.');
-    }
-
-    /**
-     * Alternar estado de favorito.
+     * Alternar favorito
      */
     public function toggle(Request $request)
     {
-        $validated = $request->validate([
-            'beer_id' => 'required|exists:beers,id',
+        $request->validate([
+            'beer_id' => 'required|exists:beers,id'
         ]);
-
-        $favorite = BeerFavorite::where('user_id', Auth::id())
-            ->where('beer_id', $validated['beer_id'])
-            ->first();
-
-        if ($favorite) {
-            $favorite->delete();
-            $status = 'removed';
+        
+        $user = Auth::user();
+        $beerId = $request->beer_id;
+        
+        // Si ya está en favoritos, quitarlo; si no, añadirlo
+        if ($user->favoritedBeers()->where('beer_id', $beerId)->exists()) {
+            $user->favoritedBeers()->detach($beerId);
+            $message = 'Cerveza eliminada de favoritos.';
         } else {
-            BeerFavorite::create([
-                'user_id' => Auth::id(),
-                'beer_id' => $validated['beer_id'],
+            $user->favoritedBeers()->attach($beerId);
+            $message = 'Cerveza añadida a favoritos.';
+        }
+        
+        // Si es una solicitud AJAX, devolver respuesta JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'isFavorited' => $user->favoritedBeers()->where('beer_id', $beerId)->exists()
             ]);
-            $status = 'added';
         }
-
-        if ($request->wantsJson()) {
-            return response()->json(['status' => $status]);
-        }
-
-        $message = $status === 'added' ? 'Cerveza añadida a favoritos.' : 'Cerveza eliminada de favoritos.';
+        
         return back()->with('success', $message);
+    }
+    
+    /**
+     * Eliminar una cerveza de favoritos
+     */
+    public function destroy(Beer $beer)
+    {
+        $user = Auth::user();
+        
+        // Verificar si la cerveza está en favoritos
+        if ($user->favoritedBeers()->where('beer_id', $beer->id)->exists()) {
+            $user->favoritedBeers()->detach($beer->id);
+            return back()->with('success', 'Cerveza eliminada de favoritos.');
+        }
+        
+        return back()->with('error', 'Esta cerveza no está en tus favoritos.');
     }
 }

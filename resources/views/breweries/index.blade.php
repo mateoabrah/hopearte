@@ -1,94 +1,153 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hopearte - Cervecerías</title>
+@extends('layouts.app')
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Animations (AOS) -->
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.css" rel="stylesheet">
-</head>
-<body class="font-sans bg-gradient-to-b from-[#1A1A1A] to-[#2E2E2E] text-gray-100">
-
-
-<nav
-        class="bg-[#1A1A1A] text-white p-4 fixed top-0 left-0 w-full z-50 shadow-lg transition-all duration-300 ease-in-out">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <a href="{{ route('beers.index') }}"
-                class="text-2xl font-bold text-[#FFD700] hover:text-[#FAC843] transition-all duration-300 ease-in-out">Hopearte</a>
-            <ul class="flex space-x-6">
-                <li><a href="{{ route('beers.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Inicio</a></li>
-                <li><a href="{{ route('beer_categories.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Categorías</a></li>
-                <li><a href="{{ route('breweries.index') }}"
-                        class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out">Cervecerías</a>
-                </li>
-
-            </ul>
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <!-- Header de la página -->
+    <div class="bg-gradient-to-r from-[#3A3A3A] to-[#2E2E2E] p-8 rounded-lg shadow-xl mb-10">
+        <h1 class="text-4xl font-bold text-[#FFD700] mb-4">Cervecerías</h1>
+        <p class="text-xl text-gray-300">Explora las mejores cervecerías artesanales y descubre sus creaciones únicas.</p>
+        
+        <!-- Barra de búsqueda -->
+        <div class="mt-6">
+            <form action="{{ route('breweries.index') }}" method="GET" class="flex flex-col md:flex-row gap-4">
+                <input type="text" name="search" placeholder="Buscar cervecerías..." value="{{ request('search') }}" 
+                    class="flex-grow bg-[#4A4A4A] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFD700]">
+                
+                <button type="submit" class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] px-6 py-2 rounded-md font-semibold transition-colors">
+                    Buscar
+                </button>
+            </form>
         </div>
-    </nav> 
-    <!-- Header Section -->
-    <header class="bg-gradient-to-r from-[#4A4A4A] to-[#2E2E2E] text-white py-24 shadow-lg">
-        <div class="max-w-7xl mx-auto text-center">
-            <h1 class="text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] to-[#FFA500] animate__animated animate__fadeInUp">
-                Cervecerías en Hopearte
-            </h1>
-            <p class="text-3xl mb-10 text-[#CCCCCC]">Explora cervecerías locales e internacionales que ofrecen cervezas artesanales únicas.</p>
+    </div>
+    
+    <!-- Filtros -->
+    <div class="bg-[#3A3A3A] p-6 rounded-lg shadow-lg mb-10">
+        <h3 class="text-xl font-semibold text-[#FFD700] mb-4">Filtrar por ubicación</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="{{ route('breweries.index') }}" class="bg-[#4A4A4A] hover:bg-[#555555] text-center text-white py-2 px-4 rounded transition-colors {{ !request('location') ? 'border-2 border-[#FFD700]' : '' }}">
+                Todas
+            </a>
+            <a href="{{ route('breweries.index', ['location' => 'Barcelona']) }}" class="bg-[#4A4A4A] hover:bg-[#555555] text-center text-white py-2 px-4 rounded transition-colors {{ request('location') == 'Barcelona' ? 'border-2 border-[#FFD700]' : '' }}">
+                Barcelona
+            </a>
+            <a href="{{ route('breweries.index', ['location' => 'Madrid']) }}" class="bg-[#4A4A4A] hover:bg-[#555555] text-center text-white py-2 px-4 rounded transition-colors {{ request('location') == 'Madrid' ? 'border-2 border-[#FFD700]' : '' }}">
+                Madrid
+            </a>
+            <a href="{{ route('breweries.index', ['location' => 'Valencia']) }}" class="bg-[#4A4A4A] hover:bg-[#555555] text-center text-white py-2 px-4 rounded transition-colors {{ request('location') == 'Valencia' ? 'border-2 border-[#FFD700]' : '' }}">
+                Valencia
+            </a>
         </div>
-    </header>
+    </div>
 
-    <!-- Breweries List Section -->
-    <section class="py-16 px-8 bg-[#2E2E2E] shadow-xl rounded-lg mx-4 my-12">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-5xl font-bold text-[#FFD700] text-center mb-8" data-aos="fade-up">Nuestras Cervecerías</h2>
-
-            <!-- Listado de Cervecerías -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                @foreach($breweries as $brewery)
-                    <div class="bg-[#3A3A3A] p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-110" data-aos="fade-up">
-                        <h3 class="text-2xl font-semibold text-[#FFD700] mb-4">{{ $brewery->name }}</h3>
-                        <p class="text-[#CCCCCC] mb-4">{{ Str::limit($brewery->description, 150) }}</p>
-
-                        <!-- Datos adicionales -->
-                        <p class="text-[#CCCCCC] text-sm mb-2"><strong>Dirección:</strong> {{ $brewery->address }}</p>
-                        <p class="text-[#CCCCCC] text-sm mb-2"><strong>Teléfono:</strong> {{ $brewery->phone_number }}</p>
-                        <p class="text-[#CCCCCC] text-sm mb-2"><strong>Email:</strong> <a href="mailto:{{ $brewery->email }}" class="text-[#FFD700]">{{ $brewery->email }}</a></p>
-                        <p class="text-[#CCCCCC] text-sm mb-4"><strong>Website:</strong> <a href="{{ $brewery->website }}" target="_blank" class="text-[#FFD700]">{{ $brewery->website }}</a></p>
-
-                        <a href="{{ route('breweries.show', $brewery->id) }}" class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] py-2 px-6 rounded-full text-lg transition-all duration-300 ease-in-out">
-                            Ver más
-                        </a>
+    <!-- Lista de cervecerías -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        @forelse ($breweries as $brewery)
+            <div class="bg-[#3A3A3A] rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105" data-aos="fade-up">
+                <div class="relative h-48">
+                    @if($brewery->image)
+                        <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
+                    @else
+                        <img src="https://images.unsplash.com/photo-1623937228271-992646fb0831?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
+                    @endif
+                    
+                    <div class="absolute top-4 right-4">
+                        @auth
+                            <form action="{{ route('brewery_favorites.toggle') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="brewery_id" value="{{ $brewery->id }}">
+                                <button type="submit" class="bg-[#2E2E2E] p-2 rounded-full hover:bg-[#4A4A4A] transition-all">
+                                    @if(Auth::user()->favoritedBreweries->contains($brewery->id))
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#FFD700]" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            </form>
+                        @endauth
                     </div>
-                @endforeach
+                </div>
+                
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-semibold text-[#FFD700] mb-2">{{ $brewery->name }}</h3>
+                            <p class="text-gray-400 text-sm mb-2">{{ $brewery->location }}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-300 mb-4 line-clamp-3">{{ $brewery->description }}</p>
+                    
+                    <div class="flex items-center text-sm text-gray-400 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-[#FFD700]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>{{ $brewery->founded_year }} - {{ $brewery->beers ? $brewery->beers->count() : 0 }} cervezas</span>
+                    </div>
+                    
+                    <a href="{{ route('breweries.show', $brewery->id) }}" class="inline-block bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] py-2 px-4 rounded font-medium transition-colors">
+                        Ver detalles
+                    </a>
+                </div>
             </div>
-        </div>
-    </section>
+        @empty
+            <div class="col-span-full bg-[#2E2E2E] rounded-lg p-8 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl text-gray-400">No se encontraron cervecerías</h3>
+                <p class="text-gray-500 mt-2">Intenta con otra búsqueda o elimina los filtros aplicados.</p>
+            </div>
+        @endforelse
+    </div>
 
-    <!-- Footer Section -->
-    <footer class="bg-[#1A1A1A] text-white py-8">
-        <div class="max-w-7xl mx-auto text-center">
-            <p class="text-sm text-[#CCCCCC]">&copy; 2025 Hopearte. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+    <!-- Paginación -->
+    <div class="mt-10">
+        {{ $breweries->links() }}
+    </div>
 
-    <!-- Animations JS -->
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        // Inicializar AOS (Animation on Scroll)
+    <!-- Mapa de ubicaciones -->
+    <div class="mt-16">
+        <h2 class="text-2xl font-bold text-[#FFD700] mb-6">Ubicaciones de nuestras cervecerías</h2>
+        <div id="breweries-map" class="w-full h-96 rounded-lg shadow-xl"></div>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<!-- Leaflet JS para el mapa -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- AOS (Animate On Scroll) -->
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+    // Inicializar AOS
+    document.addEventListener('DOMContentLoaded', function() {
         AOS.init({
             duration: 1000,
             easing: 'ease-in-out',
             once: true
         });
-    </script>
-
-</body>
-</html>
+        
+        // Inicializar el mapa de cervecerías
+        var map = L.map('breweries-map').setView([40.4168, -3.7038], 6); // Centrado en España
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Añadir marcadores para cada cervecería
+        @foreach($breweries as $brewery)
+            @if($brewery->latitude && $brewery->longitude)
+                L.marker([{{ $brewery->latitude }}, {{ $brewery->longitude }}])
+                    .addTo(map)
+                    .bindPopup("<b>{{ $brewery->name }}</b><br>{{ $brewery->location }}<br><a href='{{ route('breweries.show', $brewery->id) }}'>Ver detalles</a>");
+            @endif
+        @endforeach
+    });
+</script>
+@endpush
