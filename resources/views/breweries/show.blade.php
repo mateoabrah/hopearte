@@ -93,8 +93,35 @@
                 
                 <div>
                     <h2 class="text-2xl font-semibold text-[#FFD700] mb-4">Ubicación</h2>
-                    <div id="brewery-map" class="h-64 rounded-lg shadow-lg mb-4"></div>
-                    <p class="text-gray-300">{{ $brewery->address }}</p>
+                    
+                    @if($brewery->latitude && $brewery->longitude)
+                        <div id="brewery-map" class="h-72 rounded-xl shadow-2xl mb-6 border-2 border-[#444] overflow-hidden"></div>
+                        <div class="flex items-center bg-[#3A3A3A] p-4 rounded-xl mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#FFD700] mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <p class="text-gray-300">{{ $brewery->address }}</p>
+                        </div>
+                        
+                        @if($brewery->visitable)
+                            <div class="inline-block bg-[#FFD700] text-[#2E2E2E] px-4 py-2 rounded-lg font-medium">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                Se puede visitar
+                            </div>
+                        @endif
+                    @else
+                        <div class="bg-[#3A3A3A] rounded-xl p-6 text-center h-72 flex items-center justify-center shadow-xl">
+                            <div class="text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                                <p class="text-gray-400 text-lg">No hay ubicación disponible para esta cervecería</p>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
             
@@ -216,17 +243,24 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar mapa de la cervecería
         @if($brewery->latitude && $brewery->longitude)
-            var breweryMap = L.map('brewery-map').setView([{{ $brewery->latitude }}, {{ $brewery->longitude }}], 14);
+            var breweryMap = L.map('brewery-map', {
+                zoomControl: true,
+                scrollWheelZoom: false
+            }).setView([{{ $brewery->latitude }}, {{ $brewery->longitude }}], 15);
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            // Usando el mismo estilo de mapa que en la página welcome
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
             }).addTo(breweryMap);
             
-            L.marker([{{ $brewery->latitude }}, {{ $brewery->longitude }}])
+            // Crear un marcador simple como en la welcome
+            var marker = L.marker([{{ $brewery->latitude }}, {{ $brewery->longitude }}])
                 .addTo(breweryMap)
                 .bindPopup("<b>{{ $brewery->name }}</b><br>{{ $brewery->address }}").openPopup();
         @else
-            document.getElementById('brewery-map').innerHTML = '<div class="flex items-center justify-center h-full bg-gray-700"><p class="text-gray-400">No hay ubicación disponible</p></div>';
+            document.getElementById('brewery-map').innerHTML = '<div class="flex items-center justify-center h-full bg-[#3A3A3A]"><p class="text-gray-400">No hay ubicación disponible</p></div>';
         @endif
     });
 </script>
