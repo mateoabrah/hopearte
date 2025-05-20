@@ -9,10 +9,8 @@
                 Bienvenidos a Hopearte
             </h1>
             <p class="text-3xl mb-10 text-[#CCCCCC]">Conéctate y descubre nuevas cervezas artesanales en nuestra plataforma
-                única.</p>
-
-            <a href="{{ route('breweries.index') }}"
-                class="bg-[#FFA500] hover:bg-[#FF8C00] text-white py-4 px-10 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105">
+                única.</p>            <a href="{{ route('breweries.index') }}"
+                class="bg-[#FFD700] hover:bg-[#FFA500] text-[#2E2E2E] py-4 px-10 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 font-semibold">
                 Explora Cervecerías
             </a>
         </div>
