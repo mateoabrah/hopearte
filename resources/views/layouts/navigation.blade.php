@@ -41,7 +41,9 @@
                     @endif
                     @if(auth()->user()->role === 'company' || auth()->user()->role === 'admin')
                         <li>
-                            <a href="{{ route('my_breweries') }}" class="px-3 py-2 rounded-md {{ request()->routeIs('my_breweries') ? 'bg-[#FFD700] text-[#2E2E2E]' : 'text-white hover:bg-gray-700' }}">
+                            <a href="{{ route('my_breweries') }}" 
+                               class="text-lg hover:text-[#FFD700] transition-all duration-300 ease-in-out
+                               {{ request()->routeIs('my_breweries') ? 'text-[#FFD700]' : '' }}">
                                 Mis Cervecerías
                             </a>
                         </li>
