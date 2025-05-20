@@ -20,19 +20,20 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @foreach ($categories as $category)
                     <a href="{{ route('beer_categories.show', $category->id) }}"
-                       class="bg-[#3A3A3A] p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-110">
+                       class="bg-[#3A3A3A] p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-105">
                         <h3 class="text-2xl font-semibold text-[#FFD700] mb-4">{{ $category->name }}</h3>
                         <p class="text-[#CCCCCC]">{{ $category->description }}</p>
                     </a>
                 @endforeach
             </div>
 
+            <!-- Solo mostramos la opción de creación (no edición) -->
             @auth
                 @if(auth()->user()->role === 'admin')
                     <div class="mt-12">
-                        <a href="{{ route('beer-categories.create') }}"
+                        <a href="{{ route('beer_categories.index') }}"
                            class="bg-[#FFD700] hover:bg-amber-500 text-[#2E2E2E] font-semibold py-3 px-6 rounded-full transition-colors">
-                            Crear nueva categoría
+                            Administrar categorías
                         </a>
                     </div>
                 @endif
