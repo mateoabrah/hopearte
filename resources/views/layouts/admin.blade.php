@@ -55,24 +55,6 @@
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link {{ Route::is('beer_categories.*') ? 'bg-[#2E2E2E] text-[#FFD700]' : 'text-gray-400 hover:bg-[#2E2E2E] hover:text-[#FFD700]' }} flex items-center p-2 rounded-md transition-colors" href="{{ route('beer_categories.index') }}">
-                            <i class="fas fa-tags mr-2"></i> Categorías
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link {{ Route::is('beers.*') ? 'bg-[#2E2E2E] text-[#FFD700]' : 'text-gray-400 hover:bg-[#2E2E2E] hover:text-[#FFD700]' }} flex items-center p-2 rounded-md transition-colors" href="{{ route('beers.index') }}">
-                            <i class="fas fa-beer mr-2"></i> Cervezas
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link {{ Route::is('breweries.*') ? 'bg-[#2E2E2E] text-[#FFD700]' : 'text-gray-400 hover:bg-[#2E2E2E] hover:text-[#FFD700]' }} flex items-center p-2 rounded-md transition-colors" href="{{ route('breweries.index') }}">
-                            <i class="fas fa-industry mr-2"></i> Cervecerías
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
                         <a class="nav-link {{ Route::is('admin.banner.*') ? 'bg-[#2E2E2E] text-[#FFD700]' : 'text-gray-400 hover:bg-[#2E2E2E] hover:text-[#FFD700]' }} flex items-center p-2 rounded-md transition-colors" href="{{ route('admin.banner.index') }}">
                             <i class="fas fa-images mr-2"></i> Gestionar Banner
                         </a>
