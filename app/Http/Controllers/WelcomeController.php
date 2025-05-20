@@ -14,6 +14,11 @@ class WelcomeController extends Controller
      */
     public function index()
     {
+        $bannerBeers = Beer::where('featured_in_banner', true)
+            ->with('brewery', 'category')
+            ->take(6) // Limita el número de cervezas en el banner
+            ->get();
+        
         // Verificar si las tablas existen antes de consultarlas
         $randomBeers = [];
         $featuredBreweries = [];
@@ -41,6 +46,7 @@ class WelcomeController extends Controller
             }
         }
         
-        return view('welcome', compact('randomBeers', 'featuredBreweries', 'breweries'));
+        // Cambiamos 'home' por 'welcome'
+        return view('welcome', compact('bannerBeers', 'randomBeers', 'featuredBreweries', 'breweries'));
     }
 }

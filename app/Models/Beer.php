@@ -20,6 +20,7 @@ class Beer extends Model
         'image',
         'first_brewed',
         'seasonal',
+        'featured_in_banner',
     ];
 
     protected $casts = [

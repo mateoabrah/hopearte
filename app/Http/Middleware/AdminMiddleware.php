@@ -4,24 +4,20 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // Verifica si el usuario está autenticado y es de tipo admin
-        if ($request->user() && $request->user()->role === 'admin') {
-            return $next($request);
+        // Verifica si el usuario está autenticado y tiene rol de admin
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            abort(403, 'Acceso denegado. No tienes permisos de administrador.');
         }
 
-        // Si no es admin, redirigir al dashboard con mensaje de error
-        return redirect()->route('dashboard')->with('error', 'No tienes permisos para acceder a esta sección.');
+        return $next($request);
     }
 }
