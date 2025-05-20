@@ -157,9 +157,8 @@
                 <a href="{{ route('breweries.index') }}"
                     class="bg-[#3A3A3A] p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-110"
                     data-aos="fade-up" data-aos-delay="800">
-                    <h3 class="text-2xl font-semibold text-[#FFD700] mb-4">Únete a la Comunidad</h3>
-                    <p class="text-[#CCCCCC]">Conéctate con otros entusiastas, comparte tu amor por la cerveza artesanal y
-                        participa en eventos únicos.</p>
+                    <h3 class="text-2xl font-semibold text-[#FFD700] mb-4">Descubre Categorías</h3>
+                    <p class="text-[#CCCCCC]">Explora los diferentes estilos de cerveza, sus características y encuentra nuevas variedades que se adapten a tus gustos.</p>
                 </a>
             </div>
         </div>
