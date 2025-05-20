@@ -12,10 +12,24 @@ class BreweryController extends Controller
     /**
      * Mostrar lista de cervecerías públicas
      */
-    public function index()
+    public function index(Request $request)
     {
-        $breweries = Brewery::with('beers')->latest()->paginate(12);
-        return view('breweries.index', compact('breweries'));
+        $search = $request->input('search');
+        
+        $query = Brewery::query()->with('reviews');
+        
+        if ($search) {
+            // Corregido: cambiado 'location' por 'city'
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('city', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        $breweries = $query->latest()->paginate(12);
+        
+        return view('breweries.index', compact('breweries', 'search'));
     }
 
     /**
