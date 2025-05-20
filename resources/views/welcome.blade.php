@@ -306,8 +306,8 @@
 
         // Inicializar el mapa
         document.addEventListener('DOMContentLoaded', function () {
-            // Crear mapa con centro en España
-            var map = L.map('map').setView([40.4168, -3.7038], 6); // Centrado en España
+            // Crear mapa con centro en las coordenadas exactas especificadas
+            var map = L.map('map').setView([40.75460790052489, 0.6643184483630236], 6);
 
             // Cargar capa de OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -320,7 +320,7 @@
             // Si no hay cervecerías, mostrar mensaje
             if (breweries.length === 0) {
                 console.log("No hay cervecerías para mostrar en el mapa");
-                var noBreweriesMarker = L.marker([40.4168, -3.7038]).addTo(map);
+                var noBreweriesMarker = L.marker([40.75460790052489, 0.6643184483630236]).addTo(map);
                 noBreweriesMarker.bindPopup("<b>¡Bienvenido a Hopearte!</b><br>Aún no hay cervecerías registradas.").openPopup();
                 return;
             }
@@ -357,10 +357,20 @@
 
             // Si hay cervecerías con coordenadas, ajustar el mapa a sus límites
             if (bounds.isValid()) {
+                // Ampliar los límites pero con restricciones
                 map.fitBounds(bounds, {
                     padding: [50, 50],
-                    maxZoom: 15
+                    maxZoom: 8,     // Reducimos para mostrar un área más amplia
+                    minZoom: 7      // Aseguramos que no se aleje demasiado
                 });
+                
+                // Si los límites resultantes son demasiado amplios o estrechos, ajustar a una vista que incluya Cataluña y Baleares
+                if (map.getZoom() < 7 || map.getZoom() > 8) {
+                    map.setView([40.5, 2.5], 7);
+                }
+            } else {
+                // Si no hay límites válidos, establecer la vista predeterminada
+                map.setView([40.5, 2.5], 7);
             }
         });
 
