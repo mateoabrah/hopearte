@@ -30,6 +30,14 @@ class Beer extends Model
         'seasonal' => 'boolean',
     ];
 
+    /**
+     * Retorna la imagen o una imagen predeterminada si no hay imagen asignada
+     */
+    public function getImageAttribute($value)
+    {
+        return $value ? $value : 'beers/default.jpg';
+    }
+
     public function brewery()
     {
         return $this->belongsTo(Brewery::class);

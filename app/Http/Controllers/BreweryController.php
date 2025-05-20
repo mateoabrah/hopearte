@@ -67,7 +67,7 @@ class BreweryController extends Controller
 
         // Manejar la carga de imagen
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('breweries', 'public');
+            $validated['image'] = $request->file('image')->store('breweries/uploads', 'public');
         }
 
         // Asignar el usuario actual como propietario
@@ -115,10 +115,10 @@ class BreweryController extends Controller
         // Manejar la carga de imagen
         if ($request->hasFile('image')) {
             // Eliminar imagen anterior si existe
-            if ($brewery->image) {
+            if ($brewery->image && $brewery->image !== 'breweries/default.jpg') {
                 Storage::disk('public')->delete($brewery->image);
             }
-            $validated['image'] = $request->file('image')->store('breweries', 'public');
+            $validated['image'] = $request->file('image')->store('breweries/uploads', 'public');
         }
 
         // Actualizar la cervecería
@@ -137,7 +137,7 @@ class BreweryController extends Controller
         $this->authorize('delete', $brewery);
 
         // Eliminar imagen si existe
-        if ($brewery->image) {
+        if ($brewery->image && $brewery->image !== 'breweries/default.jpg') {
             Storage::disk('public')->delete($brewery->image);
         }
 

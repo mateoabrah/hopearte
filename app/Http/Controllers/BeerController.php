@@ -102,7 +102,7 @@ class BeerController extends Controller
         ]);
         
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('beers', 'public');
+            $validated['image'] = $request->file('image')->store('beers/uploads', 'public');
         }
         
         $beer = Beer::create($validated);
@@ -158,10 +158,10 @@ class BeerController extends Controller
         
         if ($request->hasFile('image')) {
             // Eliminar imagen anterior si existe
-            if ($beer->image) {
+            if ($beer->image && $beer->image !== 'beers/default.jpg') {
                 Storage::disk('public')->delete($beer->image);
             }
-            $validated['image'] = $request->file('image')->store('beers', 'public');
+            $validated['image'] = $request->file('image')->store('beers/uploads', 'public');
         }
         
         $beer->update($validated);
@@ -175,7 +175,7 @@ class BeerController extends Controller
     public function destroy(Beer $beer)
     {
         // Eliminar imagen si existe
-        if ($beer->image) {
+        if ($beer->image && $beer->image !== 'beers/default.jpg') {
             Storage::disk('public')->delete($beer->image);
         }
         
