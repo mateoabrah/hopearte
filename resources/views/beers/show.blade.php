@@ -2,7 +2,7 @@
 
 @section('content')
 <!-- Banner Section -->
-<section class="relative w-full h-80 bg-cover bg-center" style="background-image: url('https://bc.thegrowler.ca/wp-content/uploads/2019/11/craft-beer-north-island.jpg');">
+<section class="relative w-full h-80 bg-cover bg-center" style="background-image: url('{{ asset('storage/' . $beer->image) }}');">
     <div class="absolute inset-0 bg-black opacity-50"></div>
     <div class="relative z-10 text-center text-white py-24">
         <h1 class="text-6xl font-extrabold mb-4">{{ $beer->name }}</h1>
@@ -15,10 +15,9 @@
     <div class="max-w-7xl mx-auto">
         <h2 class="text-5xl font-bold text-[#FFD700] text-center mb-8" data-aos="fade-up">Detalles de la Cerveza</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Imagen de la cerveza -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">            <!-- Imagen de la cerveza -->
             <div class="flex justify-center items-center">
-                <img src="https://cdn.homebrewersassociation.org/wp-content/uploads/irish-red-ale-_1440-900x600.jpg" alt="Imagen de {{ $beer->name }}" class="rounded-xl shadow-xl">
+                <img src="{{ asset('storage/' . $beer->image) }}" alt="Imagen de {{ $beer->name }}" class="rounded-xl shadow-xl">
             </div>
 
             <!-- Información de la cerveza -->

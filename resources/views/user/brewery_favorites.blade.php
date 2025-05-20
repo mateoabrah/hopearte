@@ -13,15 +13,8 @@
     @if ($favorites->count() > 0)
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         @foreach ($favorites as $brewery)
-        <div class="bg-[#2E2E2E] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-            <div class="relative">
-                @if($brewery->logo)
-                <img src="{{ asset('storage/' . $brewery->logo) }}" alt="{{ $brewery->name }}" class="w-full h-48 object-cover">
-                @else
-                <div class="w-full h-48 bg-gray-700 flex items-center justify-center">
-                    <span class="text-gray-400">Sin logo</span>
-                </div>
-                @endif
+        <div class="bg-[#2E2E2E] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">            <div class="relative">
+                <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-48 object-cover">
                 <form action="{{ route('brewery_favorites.destroy', $brewery->id) }}" method="POST" class="absolute top-2 right-2">
                     @csrf
                     @method('DELETE')

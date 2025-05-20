@@ -48,9 +48,8 @@
                                 <div class="swiper-wrapper">
                                     @foreach($bannerBeers as $beer)
                                         <div class="swiper-slide">
-                                            <div class="bg-[#2E2E2E] rounded-xl overflow-hidden shadow-lg h-full">
-                                                <div class="relative h-48 overflow-hidden">
-                                                    <img src="https://cdn.homebrewersassociation.org/wp-content/uploads/irish-red-ale-_1440-900x600.jpg"
+                                            <div class="bg-[#2E2E2E] rounded-xl overflow-hidden shadow-lg h-full">                                                <div class="relative h-48 overflow-hidden">
+                                                    <img src="{{ asset('storage/' . $beer->image) }}"
                                                         alt="{{ $beer->name }}"
                                                         class="w-full h-full object-cover transition-transform duration-500 transform hover:scale-110">
                                                     
@@ -113,9 +112,8 @@
             <div class="swiper mySwiper mb-12">
                 <div class="swiper-wrapper">
                     @foreach ($randomBeers as $beer)
-                        <div class="swiper-slide">
-                            <a href="{{ route('beers.show', $beer->id) }}">
-                                <img src="https://cdn.homebrewersassociation.org/wp-content/uploads/irish-red-ale-_1440-900x600.jpg"
+                        <div class="swiper-slide">                            <a href="{{ route('beers.show', $beer->id) }}">
+                                <img src="{{ asset('storage/' . $beer->image) }}"
                                     alt="Imagen de {{ $beer->name }}" class="rounded-xl shadow-xl">
                             </a>
                         </div>

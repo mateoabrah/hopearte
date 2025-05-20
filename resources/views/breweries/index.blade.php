@@ -43,12 +43,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @forelse ($breweries as $brewery)
             <div class="bg-[#3A3A3A] rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105" data-aos="fade-up">
-                <div class="relative h-48">
-                    @if($brewery->image)
-                        <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
-                    @else
-                        <img src="https://images.unsplash.com/photo-1623937228271-992646fb0831?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
-                    @endif
+                <div class="relative h-48">                    <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
                     
                     <div class="absolute top-4 right-4">
                         @auth
