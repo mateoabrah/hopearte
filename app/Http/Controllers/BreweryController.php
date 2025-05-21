@@ -12,10 +12,24 @@ class BreweryController extends Controller
     /**
      * Mostrar lista de cervecerías públicas
      */
-    public function index()
+    public function index(Request $request)
     {
-        $breweries = Brewery::with('beers')->latest()->paginate(12);
-        return view('breweries.index', compact('breweries'));
+        $search = $request->input('search');
+        
+        $query = Brewery::query()->with('reviews');
+        
+        if ($search) {
+            // Corregido: cambiado 'location' por 'city'
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('city', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        $breweries = $query->latest()->paginate(12);
+        
+        return view('breweries.index', compact('breweries', 'search'));
     }
 
     /**
@@ -67,7 +81,7 @@ class BreweryController extends Controller
 
         // Manejar la carga de imagen
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('breweries', 'public');
+            $validated['image'] = $request->file('image')->store('breweries/uploads', 'public');
         }
 
         // Asignar el usuario actual como propietario
@@ -115,10 +129,10 @@ class BreweryController extends Controller
         // Manejar la carga de imagen
         if ($request->hasFile('image')) {
             // Eliminar imagen anterior si existe
-            if ($brewery->image) {
+            if ($brewery->image && $brewery->image !== 'breweries/default.jpg') {
                 Storage::disk('public')->delete($brewery->image);
             }
-            $validated['image'] = $request->file('image')->store('breweries', 'public');
+            $validated['image'] = $request->file('image')->store('breweries/uploads', 'public');
         }
 
         // Actualizar la cervecería
@@ -137,7 +151,7 @@ class BreweryController extends Controller
         $this->authorize('delete', $brewery);
 
         // Eliminar imagen si existe
-        if ($brewery->image) {
+        if ($brewery->image && $brewery->image !== 'breweries/default.jpg') {
             Storage::disk('public')->delete($brewery->image);
         }
 

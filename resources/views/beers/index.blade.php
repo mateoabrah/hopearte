@@ -36,7 +36,7 @@
             @forelse($beers as $beer)
                 <div class="bg-[#3A3A3A] rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
                     <a href="{{ route('beers.show', $beer->id) }}">
-                        <img src="{{ $beer->image_url ?? 'https://cdn.homebrewersassociation.org/wp-content/uploads/irish-red-ale-_1440-900x600.jpg' }}" 
+                        <img src="{{ asset('storage/' . $beer->image) }}" 
                              alt="{{ $beer->name }}" 
                              class="w-full h-48 object-cover">
                         

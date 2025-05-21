@@ -43,12 +43,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @forelse ($breweries as $brewery)
             <div class="bg-[#3A3A3A] rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:scale-105" data-aos="fade-up">
-                <div class="relative h-48">
-                    @if($brewery->image)
-                        <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
-                    @else
-                        <img src="https://images.unsplash.com/photo-1623937228271-992646fb0831?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
-                    @endif
+                <div class="relative h-48">                    <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
                     
                     <div class="absolute top-4 right-4">
                         @auth
@@ -117,6 +112,72 @@
 </div>
 @endsection
 
+@push('styles')
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* Personalización del tema oscuro para Leaflet */
+        .leaflet-tile-pane {
+            filter: grayscale(90%) invert(100%) contrast(70%) hue-rotate(180deg) brightness(80%);
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(46, 46, 46, 0.8) !important;
+            color: #ccc !important;
+        }
+
+        .leaflet-control-attribution a {
+            color: #FFD700 !important;
+        }
+
+        .leaflet-control-zoom a {
+            background-color: #333 !important;
+            color: #fff !important;
+            border-color: #555 !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background-color: #444 !important;
+        }
+
+        .brewery-popup .leaflet-popup-content-wrapper {
+            background-color: #2E2E2E;
+            color: #FFFFFF;
+            border-radius: 8px;
+        }
+
+        .brewery-popup .leaflet-popup-tip {
+            background-color: #2E2E2E;
+        }
+
+        .brewery-popup-content h4 {
+            color: #FFD700;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .brewery-popup-content p {
+            margin: 3px 0;
+        }
+
+        .brewery-popup-content a {
+            display: inline-block;
+            background-color: #FFD700;
+            color: #2E2E2E;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .brewery-popup-content a:hover {
+            background-color: #FFA500;
+        }
+    </style>
+@endpush
+
 @push('scripts')
 <!-- Leaflet JS para el mapa -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -134,20 +195,66 @@
         });
         
         // Inicializar el mapa de cervecerías
-        var map = L.map('breweries-map').setView([40.4168, -3.7038], 6); // Centrado en España
+        var map = L.map('breweries-map').setView([40.4, 1.5], 6); // Coordenadas ajustadas como en welcome
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
         
-        // Añadir marcadores para cada cervecería
+        // Crear límites para ajustar el zoom automáticamente
+        var bounds = L.latLngBounds();
+        
+        // Añadir puntos de anclaje para asegurar que Madrid, Cataluña y Baleares siempre sean visibles
+        bounds.extend([40.4168, -3.7038]); // Madrid
+        bounds.extend([41.3851, 2.1734]);  // Barcelona
+        bounds.extend([39.5696, 2.6502]);  // Palma de Mallorca
+        
+        // Añadir marcadores para cada cervecería con popups mejorados
         @foreach($breweries as $brewery)
             @if($brewery->latitude && $brewery->longitude)
-                L.marker([{{ $brewery->latitude }}, {{ $brewery->longitude }}])
-                    .addTo(map)
-                    .bindPopup("<b>{{ $brewery->name }}</b><br>{{ $brewery->location }}<br><a href='{{ route('breweries.show', $brewery->id) }}'>Ver detalles</a>");
+                var marker = L.marker([{{ $brewery->latitude }}, {{ $brewery->longitude }}]).addTo(map);
+                
+                var popupContent = `
+                    <div class="brewery-popup-content">
+                        <h4>{{ $brewery->name }}</h4>
+                        <p><strong>Ciudad:</strong> {{ $brewery->city ?? $brewery->location }}</p>
+                        @if($brewery->address)
+                        <p><strong>Dirección:</strong> {{ $brewery->address }}</p>
+                        @endif
+                        @if($brewery->founded_year)
+                        <p><strong>Fundada en:</strong> {{ $brewery->founded_year }}</p>
+                        @endif
+                        <a href="{{ route('breweries.show', $brewery->id) }}">Ver detalles</a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent, {
+                    className: 'brewery-popup',
+                    maxWidth: 300
+                });
+                
+                // Extender los límites para incluir este marcador
+                bounds.extend([{{ $brewery->latitude }}, {{ $brewery->longitude }}]);
             @endif
         @endforeach
+        
+        // Si hay cervecerías con coordenadas, ajustar el mapa a sus límites
+        if (bounds.isValid()) {
+            // Ampliar los límites pero con restricciones
+            map.fitBounds(bounds, {
+                padding: [50, 50],
+                maxZoom: 7,    // No acercar demasiado
+                minZoom: 6     // No alejar demasiado
+            });
+            
+            // Si los límites resultantes son demasiado amplios o estrechos, ajustar a una vista predeterminada
+            if (map.getZoom() < 6 || map.getZoom() > 7) {
+                map.setView([40.4, 1.5], 6);
+            }
+        } else {
+            // Si no hay límites válidos, establecer la vista predeterminada
+            map.setView([40.4, 1.5], 6);
+        }
     });
 </script>
 @endpush

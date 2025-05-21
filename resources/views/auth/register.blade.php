@@ -51,13 +51,18 @@
             </div>
 
             <!-- Account Type -->
-            <div class="mt-4">
-                <x-input-label for="role" :value="__('Tipo de cuenta')" />
-                <select id="role" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" name="role" required>
+            <div class="mb-6">
+                <label for="role" class="block text-sm font-medium text-[#CCCCCC]">Tipo de cuenta</label>
+                <select id="role" 
+                        class="mt-1 w-full rounded-md border border-gray-700 bg-[#2E2E2E] p-2 text-white focus:border-[#FFD700] focus:outline-none" 
+                        name="role" 
+                        required>
                     <option value="user">Usuario normal</option>
                     <option value="company">Empresa cervecera</option>
                 </select>
-                <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                @error('role')
+                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex items-center justify-between">

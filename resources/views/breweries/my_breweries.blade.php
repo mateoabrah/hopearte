@@ -21,15 +21,8 @@
     @if($breweries->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($breweries as $brewery)
-                <div class="bg-[#2E2E2E] rounded-lg shadow-lg overflow-hidden">
-                    <div class="h-40 bg-gray-700 overflow-hidden">
-                        @if($brewery->image)
-                            <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center bg-gray-800">
-                                <span class="text-gray-400">Sin imagen</span>
-                            </div>
-                        @endif
+                <div class="bg-[#2E2E2E] rounded-lg shadow-lg overflow-hidden">                    <div class="h-40 bg-gray-700 overflow-hidden">
+                        <img src="{{ asset('storage/' . $brewery->image) }}" alt="{{ $brewery->name }}" class="w-full h-full object-cover">
                     </div>
                     <div class="p-6">
                         <h2 class="text-xl font-bold text-[#FFD700] mb-2">{{ $brewery->name }}</h2>

@@ -30,6 +30,14 @@ class Brewery extends Model
         'visitable' => 'boolean'
     ];
 
+    /**
+     * Retorna la imagen o una imagen predeterminada si no hay imagen asignada
+     */
+    public function getImageAttribute($value)
+    {
+        return $value ? $value : 'breweries/default.jpg';
+    }
+
     // Relaciones
     public function user()
     {

@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Http\Controllers\BeerCategoryController;
 use App\Http\Controllers\BeerController;
 use App\Http\Controllers\BeerFavoriteController;
@@ -65,25 +64,39 @@ Route::middleware('auth')->group(function () {
         Route::delete('/my-breweries/{brewery}/beers/{beer}', [BreweryBeerController::class, 'destroy'])->name('brewery.beers.destroy');
     });
 
-    // Rutas solo para administradores
-    Route::middleware([AdminMiddleware::class])->group(function () {
-        // CRUD de cervezas (excepto index y show que son públicas)
-        Route::get('/beers/create', [BeerController::class, 'create'])->name('beers.create');
-        Route::post('/beers', [BeerController::class, 'store'])->name('beers.store');
-        Route::get('/beers/{beer}/edit', [BeerController::class, 'edit'])->name('beers.edit');
-        Route::put('/beers/{beer}', [BeerController::class, 'update'])->name('beers.update');
-        Route::delete('/beers/{beer}', [BeerController::class, 'destroy'])->name('beers.destroy');
-        
-        // CRUD de categorías (excepto index y show que son públicas)
-        Route::get('/beer-categories/create', [BeerCategoryController::class, 'create'])->name('beer_categories.create');
-        Route::post('/beer-categories', [BeerCategoryController::class, 'store'])->name('beer_categories.store');
-        Route::get('/beer-categories/{beerCategory}/edit', [BeerCategoryController::class, 'edit'])->name('beer_categories.edit');
-        Route::put('/beer-categories/{beerCategory}', [BeerCategoryController::class, 'update'])->name('beer_categories.update');
-        Route::delete('/beer-categories/{beerCategory}', [BeerCategoryController::class, 'destroy'])->name('beer_categories.destroy');
-        
-        // Eliminar cervecerías (solo admin)
-        Route::delete('/breweries/{brewery}', [BreweryController::class, 'destroy'])->name('breweries.destroy');
-    });
+    // Rutas solo para administradores - USANDO LA CLASE COMPLETA
+    Route::middleware(['auth', AdminMiddleware::class])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            // Dashboard administrativo
+            Route::get('/dashboard', function () {
+                return view('admin.dashboard');
+            })->name('dashboard');
+
+            // Banner management
+            Route::get('/banner', [App\Http\Controllers\Admin\BannerController::class, 'index'])
+                ->name('banner.index');
+            Route::patch('/banner/toggle/{beer}', [App\Http\Controllers\Admin\BannerController::class, 'toggleFeatured'])
+                ->name('banner.toggle');
+            
+            // CRUD de cervezas (excepto index y show que son públicas)
+            Route::get('/beers/create', [BeerController::class, 'create'])->name('beers.create');
+            Route::post('/beers', [BeerController::class, 'store'])->name('beers.store');
+            Route::get('/beers/{beer}/edit', [BeerController::class, 'edit'])->name('beers.edit');
+            Route::put('/beers/{beer}', [BeerController::class, 'update'])->name('beers.update');
+            Route::delete('/beers/{beer}', [BeerController::class, 'destroy'])->name('beers.destroy');
+            
+            // CRUD de categorías (excepto index y show que son públicas)
+            Route::get('/beer-categories/create', [BeerCategoryController::class, 'create'])->name('beer_categories.create');
+            Route::post('/beer-categories', [BeerCategoryController::class, 'store'])->name('beer_categories.store');
+            Route::get('/beer-categories/{beerCategory}/edit', [BeerCategoryController::class, 'edit'])->name('beer_categories.edit');
+            Route::put('/beer-categories/{beerCategory}', [BeerCategoryController::class, 'update'])->name('beer_categories.update');
+            Route::delete('/beer-categories/{beerCategory}', [BeerCategoryController::class, 'destroy'])->name('beer_categories.destroy');
+            
+            // Eliminar cervecerías (solo admin)
+            Route::delete('/breweries/{brewery}', [BreweryController::class, 'destroy'])->name('breweries.destroy');
+        });
 });
 
 // IMPORTANTE: Coloca las rutas públicas DESPUÉS de las protegidas específicas

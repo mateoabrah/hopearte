@@ -20,6 +20,7 @@ class Beer extends Model
         'image',
         'first_brewed',
         'seasonal',
+        'featured_in_banner',
     ];
 
     protected $casts = [
@@ -28,6 +29,14 @@ class Beer extends Model
         'first_brewed' => 'integer',
         'seasonal' => 'boolean',
     ];
+
+    /**
+     * Retorna la imagen o una imagen predeterminada si no hay imagen asignada
+     */
+    public function getImageAttribute($value)
+    {
+        return $value ? $value : 'beers/default.jpg';
+    }
 
     public function brewery()
     {
