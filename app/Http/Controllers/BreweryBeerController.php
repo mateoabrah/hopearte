@@ -8,6 +8,7 @@ use App\Models\BeerCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class BreweryBeerController extends Controller
 {
@@ -24,21 +25,51 @@ class BreweryBeerController extends Controller
     /**
      * Mostrar las cervezas de una cervecería
      */
-    public function index(Brewery $brewery)
+    public function index($breweryParam)
     {
-        $this->checkBreweryOwnership($brewery);
+        // Intentar encontrar por ID
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+        } else {
+            // Intentar encontrar por nombre o slug
+            $brewery = Brewery::where('name', $breweryParam)->first();
+            if (!$brewery) {
+                $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                    return \Str::slug($b->name) === $breweryParam;
+                });
+            }
+        }
         
-        // Obtener todas las cervezas asociadas a esta cervecería
+        if (!$brewery) {
+            abort(404);
+        }
+        
         $beers = $brewery->beers()->paginate(10);
-        
         return view('brewery_beers.index', compact('brewery', 'beers'));
     }
 
     /**
      * Mostrar el formulario para añadir una cerveza
      */
-    public function create(Brewery $brewery)
+    public function create($breweryParam)
     {
+        // Intentar encontrar por ID
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+        } else {
+            // Intentar encontrar por nombre o slug
+            $brewery = Brewery::where('name', $breweryParam)->first();
+            if (!$brewery) {
+                $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                    return \Str::slug($b->name) === $breweryParam;
+                });
+            }
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
         $this->checkBreweryOwnership($brewery);
         
         // Obtener todas las cervezas existentes para mostrar en el selector
@@ -86,7 +117,19 @@ class BreweryBeerController extends Controller
             // Crear una nueva cerveza y asociarla a la cervecería
             $beer = new Beer();
             $beer->name = $request->name;
-            $beer->slug = Str::slug($request->name);
+            
+            // Generar un slug único
+            $baseSlug = Str::slug($request->name);
+            $slug = $baseSlug;
+            $counter = 1;
+
+            // Si el slug ya existe, añadir un sufijo numérico
+            while (Beer::where('slug', $slug)->exists()) {
+                $slug = $baseSlug . '-' . $counter;
+                $counter++;
+            }
+
+            $beer->slug = $slug;
             $beer->description = $request->description;
             $beer->abv = $request->abv;
             $beer->ibu = $request->ibu;
@@ -113,14 +156,146 @@ class BreweryBeerController extends Controller
     /**
      * Eliminar la asociación entre una cerveza y una cervecería
      */
-    public function destroy(Brewery $brewery, Beer $beer)
+    public function destroy($breweryParam, $beerId)
     {
+        // Buscar cervecería por ID o nombre/slug
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+        } else {
+            $brewery = Brewery::where('name', $breweryParam)->first();
+            if (!$brewery) {
+                $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                    return \Str::slug($b->name) === $breweryParam;
+                });
+            }
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
+        // Verificar permisos
         $this->checkBreweryOwnership($brewery);
         
-        // Eliminar la relación entre la cervecería y la cerveza
+        // Buscar la cerveza
+        $beer = Beer::find($beerId);
+        if (!$beer) {
+            return redirect()->route('brewery.beers.index', $brewery->getRouteKey())
+                ->with('error', 'La cerveza no existe');
+        }
+        
+        // Verificar que la cerveza pertenece a la cervecería
+        if (!$brewery->beers()->where('beer_id', $beer->id)->exists()) {
+            return redirect()->route('brewery.beers.index', $brewery->getRouteKey())
+                ->with('error', 'Esta cerveza no pertenece a tu cervecería');
+        }
+        
+        // Eliminar la relación (no la cerveza en sí, solo la asociación)
         $brewery->beers()->detach($beer->id);
         
-        return redirect()->route('brewery.beers.index', $brewery)
-            ->with('success', 'La cerveza ha sido eliminada de tu cervecería correctamente.');
+        return redirect()->route('brewery.beers.index', $brewery->getRouteKey())
+            ->with('success', 'La cerveza ha sido eliminada de tu cervecería correctamente');
+    }
+    
+    /**
+     * Mostrar el formulario para editar una cerveza de la cervecería
+     */
+    public function edit($breweryParam, $beerId)
+    {
+        // Buscar cervecería por ID o nombre/slug
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+        } else {
+            $brewery = Brewery::where('name', $breweryParam)->first();
+            if (!$brewery) {
+                $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                    return \Str::slug($b->name) === $breweryParam;
+                });
+            }
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
+        // Buscar la cerveza por ID
+        $beer = Beer::find($beerId);
+        if (!$beer) {
+            abort(404, 'Cerveza no encontrada');
+        }
+        
+        $this->checkBreweryOwnership($brewery);
+        
+        // Verificar que la cerveza pertenece a la cervecería
+        if (!$brewery->beers()->where('beer_id', $beer->id)->exists()) {
+            abort(404, 'Esta cerveza no pertenece a tu cervecería');
+        }
+        
+        // Obtener categorías para el formulario
+        $categories = BeerCategory::orderBy('name')->get();
+        
+        return view('brewery_beers.edit', compact('brewery', 'beer', 'categories'));
+    }
+
+    /**
+     * Actualizar una cerveza de la cervecería
+     */
+    public function update(Request $request, $breweryParam, Beer $beer)
+    {
+        // Buscar cervecería por ID o nombre/slug
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+        } else {
+            $brewery = Brewery::where('name', $breweryParam)->first();
+            if (!$brewery) {
+                $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                    return \Str::slug($b->name) === $breweryParam;
+                });
+            }
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
+        $this->checkBreweryOwnership($brewery);
+        
+        // Verificar que la cerveza pertenece a la cervecería
+        if (!$brewery->beers()->where('beer_id', $beer->id)->exists()) {
+            abort(404, 'Esta cerveza no pertenece a tu cervecería');
+        }
+        
+        // Validación del formulario
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'abv' => 'required|numeric|between:0.1,99.9',
+            'ibu' => 'nullable|numeric|min:0',
+            'beer_category_id' => 'required|exists:beer_categories,id',
+            'image' => 'nullable|image|max:2048'
+        ]);
+        
+        // Actualizar la cerveza
+        $beer->name = $request->name;
+        $beer->slug = Str::slug($request->name);
+        $beer->description = $request->description;
+        $beer->abv = $request->abv;
+        $beer->ibu = $request->ibu;
+        $beer->beer_category_id = $request->beer_category_id;
+        
+        // Procesar la imagen si se ha subido una nueva
+        if ($request->hasFile('image')) {
+            // Eliminar la imagen anterior si existe
+            if ($beer->image && $beer->image !== 'beers/default.jpg') {
+                Storage::disk('public')->delete($beer->image);
+            }
+            $path = $request->file('image')->store('beers', 'public');
+            $beer->image = $path;
+        }
+        
+        $beer->save();
+        
+        return redirect()->route('brewery.beers.index', $brewery->getRouteKey())
+            ->with('success', 'La cerveza ha sido actualizada correctamente.');
     }
 }

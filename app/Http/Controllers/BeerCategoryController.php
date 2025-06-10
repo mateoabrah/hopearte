@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Beer;
 use App\Models\BeerCategory;
 use Illuminate\Http\Request;
 
@@ -43,9 +44,29 @@ class BeerCategoryController extends Controller
     /**
      * Mostrar una categoría específica
      */
-    public function show(BeerCategory $beerCategory)
+    public function show($category = null)
     {
-        $beers = $beerCategory->beers()->with('brewery')->paginate(12);
+        // Si no hay categoría, redirigir a la lista
+        if (!$category) {
+            return redirect()->route('beer_categories.index');
+        }
+        
+        // Primero intentar buscar por ID
+        if (is_numeric($category)) {
+            $beerCategory = BeerCategory::find($category);
+        } else {
+            // Si no es numérico, buscar por nombre
+            $beerCategory = BeerCategory::where('name', 'like', "%{$category}%")->first();
+        }
+        
+        // Si no se encuentra, redirigir con mensaje
+        if (!$beerCategory) {
+            return redirect()->route('beer_categories.index')
+                ->with('error', 'Categoría no encontrada');
+        }
+        
+        // Obtener cervezas que pertenecen a esta categoría
+        $beers = Beer::where('beer_category_id', $beerCategory->id)->paginate(12);
         
         return view('beer_categories.show', compact('beerCategory', 'beers'));
     }

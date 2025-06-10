@@ -6,20 +6,26 @@ use App\Models\Brewery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BreweryController extends Controller
 {
     /**
-     * Mostrar lista de cervecerías públicas
+     * Mostrar lista de cervecerías
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
+        $query = Brewery::with('beers');
         
-        $query = Brewery::query()->with('reviews');
+        // Filtrar por ubicación (usando nombres)
+        if ($request->has('location')) {
+            $query->where('city', 'like', '%' . $request->location . '%')
+                  ->orWhere('location', 'like', '%' . $request->location . '%');
+        }
         
-        if ($search) {
-            // Corregido: cambiado 'location' por 'city'
+        // Búsqueda por nombre
+        if ($request->has('search')) {
+            $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('city', 'LIKE', "%{$search}%")
@@ -29,14 +35,35 @@ class BreweryController extends Controller
         
         $breweries = $query->latest()->paginate(12);
         
-        return view('breweries.index', compact('breweries', 'search'));
+        return view('breweries.index', compact('breweries'));
     }
 
     /**
      * Mostrar una cervecería específica
      */
-    public function show(Brewery $brewery)
+    public function show($breweryParam)
     {
+        // Intentar encontrar por ID (para mantener compatibilidad)
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+            if ($brewery) {
+                return view('breweries.show', compact('brewery', 'beers'));
+            }
+        }
+        
+        // Intentar encontrar por nombre exacto
+        $brewery = Brewery::where('name', $breweryParam)->first();
+        if (!$brewery) {
+            // Intentar encontrar por slug
+            $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                return \Str::slug($b->name) === $breweryParam;
+            });
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
         $beers = $brewery->beers()->paginate(8);
         return view('breweries.show', compact('brewery', 'beers'));
     }
@@ -66,8 +93,9 @@ class BreweryController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
+        // Añade validación para nombre único
+        $request->validate([
+            'name' => 'required|string|max:255|unique:breweries,name',
             'description' => 'required|string',
             'city' => 'required|string|max:255',
             'address' => 'required|string|max:255',
@@ -87,6 +115,22 @@ class BreweryController extends Controller
         // Asignar el usuario actual como propietario
         $validated['user_id'] = Auth::id();
 
+        $brewery = new Brewery();
+        $brewery->name = $request->name;
+        
+        // Generar un slug único
+        $baseSlug = Str::slug($request->name);
+        $slug = $baseSlug;
+        $counter = 1;
+        
+        // Si el slug ya existe, añadir un sufijo numérico
+        while (Brewery::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+        
+        $brewery->slug = $slug;
+
         // Crear la cervecería
         $brewery = Brewery::create($validated);
 
@@ -97,11 +141,28 @@ class BreweryController extends Controller
     /**
      * Mostrar formulario para editar cervecería
      */
-    public function edit(Brewery $brewery)
+    public function edit($breweryParam)
     {
-        // Verificar que el usuario es el propietario o admin
-        $this->authorize('update', $brewery);
-
+        // Intentar encontrar por ID (para mantener compatibilidad)
+        if (is_numeric($breweryParam)) {
+            $brewery = Brewery::find($breweryParam);
+            if ($brewery) {
+                return view('breweries.edit', compact('brewery'));
+            }
+        }
+        
+        // Intentar encontrar por nombre o slug
+        $brewery = Brewery::where('name', $breweryParam)->first();
+        if (!$brewery) {
+            $brewery = Brewery::all()->first(function($b) use ($breweryParam) {
+                return \Str::slug($b->name) === $breweryParam;
+            });
+        }
+        
+        if (!$brewery) {
+            abort(404, 'Cervecería no encontrada');
+        }
+        
         return view('breweries.edit', compact('brewery'));
     }
 

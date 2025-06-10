@@ -13,6 +13,10 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Middleware\CompanyMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Models\Beer;
+use App\Models\Brewery;
 
 // Ruta principal (welcome)
 Route::get('/', [WelcomeController::class, 'index'])->name('welcome');
@@ -29,7 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Favoritos de cerveza
-    Route::post('/beer-favorites/toggle', [BeerFavoriteController::class, 'toggle'])->name('beer_favorites.toggle');
+    Route::post('/beer-favorites/toggle', [BeerFavoriteController::class, 'toggle'])
+        ->name('beer_favorites.toggle')
+        ->middleware('auth');
     Route::get('/favorites/beers', [BeerFavoriteController::class, 'index'])->name('user.beer_favorites');
     Route::delete('/beer-favorites/{beer}', [BeerFavoriteController::class, 'destroy'])->name('beer_favorites.destroy');
     
@@ -56,12 +62,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/breweries/{brewery}', [BreweryController::class, 'update'])->name('breweries.update');
     });
 
-    // Rutas para gestionar cervezas de una cervecería (solo para usuarios company o admin)
-    Route::middleware(['auth', 'can:manage-brewery-beers'])->group(function () {
-        Route::get('/my-breweries/{brewery}/beers', [BreweryBeerController::class, 'index'])->name('brewery.beers.index');
-        Route::get('/my-breweries/{brewery}/beers/create', [BreweryBeerController::class, 'create'])->name('brewery.beers.create');
-        Route::post('/my-breweries/{brewery}/beers', [BreweryBeerController::class, 'store'])->name('brewery.beers.store');
-        Route::delete('/my-breweries/{brewery}/beers/{beer}', [BreweryBeerController::class, 'destroy'])->name('brewery.beers.destroy');
+    // Rutas para gestión de cervezas de cervecería
+    Route::prefix('my-breweries/{brewery}/beers')->middleware(['auth', 'can:manage-brewery-beers'])->group(function () {
+        Route::get('/', [BreweryBeerController::class, 'index'])->name('brewery.beers.index');
+        Route::get('/create', [BreweryBeerController::class, 'create'])->name('brewery.beers.create');
+        Route::post('/', [BreweryBeerController::class, 'store'])->name('brewery.beers.store');
+        Route::get('/{beer}/edit', [BreweryBeerController::class, 'edit'])->name('brewery.beers.edit');
+        Route::put('/{beer}', [BreweryBeerController::class, 'update'])->name('brewery.beers.update');
+        Route::delete('/{beer}', [BreweryBeerController::class, 'destroy'])->name('brewery.beers.destroy');
     });
 
     // Rutas solo para administradores - USANDO LA CLASE COMPLETA
@@ -79,6 +87,8 @@ Route::middleware('auth')->group(function () {
                 ->name('banner.index');
             Route::patch('/banner/toggle/{beer}', [App\Http\Controllers\Admin\BannerController::class, 'toggleFeatured'])
                 ->name('banner.toggle');
+            Route::post('/banner/reorder', [App\Http\Controllers\Admin\BannerController::class, 'reorder'])
+                ->name('banner.reorder');
             
             // CRUD de cervezas (excepto index y show que son públicas)
             Route::get('/beers/create', [BeerController::class, 'create'])->name('beers.create');
@@ -105,6 +115,23 @@ Route::get('/beers/{beer}', [BeerController::class, 'show'])->name('beers.show')
 Route::get('/breweries', [BreweryController::class, 'index'])->name('breweries.index');
 Route::get('/breweries/{brewery}', [BreweryController::class, 'show'])->name('breweries.show');
 Route::get('/beer-categories', [BeerCategoryController::class, 'index'])->name('beer_categories.index');
-Route::get('/beer-categories/{beerCategory}', [BeerCategoryController::class, 'show'])->name('beer_categories.show');
+Route::get('/beer-categories/{category?}', [BeerCategoryController::class, 'show'])->name('beer_categories.show');
+Route::get('/check-beer-name', function (Request $request) {
+    $name = $request->input('name');
+    
+    // Comprobamos si ya existe una cerveza con ese nombre (usando el slug)
+    $slug = Str::slug($name);
+    $exists = Beer::where('slug', $slug)->exists();
+    
+    return response()->json(['exists' => $exists]);
+});
+Route::get('/check-brewery-name', function (Request $request) {
+    $name = $request->input('name');
+    
+    // Comparación insensible a mayúsculas/minúsculas
+    $exists = Brewery::whereRaw('LOWER(name) = ?', [strtolower($name)])->exists();
+    
+    return response()->json(['exists' => $exists]);
+});
 
 require __DIR__.'/auth.php';

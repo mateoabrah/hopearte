@@ -75,6 +75,80 @@ class Brewery extends Model
     {
         return $this->reviews()->avg('rating') ?: 0;
     }
+    
+    /**
+     * Scope para filtrar cervecerías
+     */
+    public function scopeFilter($query, $filters)
+    {
+        // Filtrar por nombre
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+        
+        // Filtrar por ciudad
+        if (!empty($filters['city'])) {
+            $query->where('city', 'like', '%' . $filters['city'] . '%');
+        }
+        
+        // Filtrar por visitables
+        if (isset($filters['visitable'])) {
+            $query->where('visitable', $filters['visitable']);
+        }
+        
+        // Filtrar por año de fundación
+        if (!empty($filters['year_min']) && !empty($filters['year_max'])) {
+            $query->whereBetween('founded_year', [$filters['year_min'], $filters['year_max']]);
+        } elseif (!empty($filters['year_min'])) {
+            $query->where('founded_year', '>=', $filters['year_min']);
+        } elseif (!empty($filters['year_max'])) {
+            $query->where('founded_year', '<=', $filters['year_max']);
+        }
+        
+        // Filtrar por usuario
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+        
+        // Ordenar resultados
+        $orderBy = $filters['order_by'] ?? 'name';
+        $orderDirection = $filters['order_direction'] ?? 'asc';
+        
+        if ($orderBy === 'rating') {
+            $query->withAvg('reviews', 'rating')
+                  ->orderBy('reviews_avg_rating', $orderDirection);
+        } else {
+            $allowedFields = ['name', 'city', 'founded_year'];
+            if (in_array($orderBy, $allowedFields)) {
+                $query->orderBy($orderBy, $orderDirection);
+            } else {
+                $query->orderBy('name', 'asc');
+            }
+        }
+        
+        return $query;
+    }
+    
+    /**
+     * Get the route key name for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'name'; // Indicamos que usamos la columna 'name'
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKey()
+    {
+        // Limpia el nombre para URL
+        return \Str::slug($this->name);
+    }
 }
 
 use Illuminate\Database\Migrations\Migration;

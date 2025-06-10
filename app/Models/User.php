@@ -85,7 +85,8 @@ class User extends Authenticatable
      */
     public function favoritedBeers()
     {
-        return $this->belongsToMany(Beer::class, 'beer_favorites');
+        return $this->belongsToMany(Beer::class, 'beer_favorites', 'user_id', 'beer_id')
+                    ->withTimestamps();
     }
 
     /**

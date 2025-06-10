@@ -79,4 +79,25 @@ class Beer extends Model
     {
         return $this->reviews()->avg('rating') ?: 0;
     }
+
+    /**
+     * Get the route key name for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'name'; // Indicamos que usamos la columna 'name'
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKey()
+    {
+        // Limpia el nombre para URL
+        return \Str::slug($this->name);
+    }
 }

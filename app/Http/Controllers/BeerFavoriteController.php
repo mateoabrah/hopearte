@@ -32,32 +32,23 @@ class BeerFavoriteController extends Controller
      */
     public function toggle(Request $request)
     {
-        $request->validate([
-            'beer_id' => 'required|exists:beers,id'
-        ]);
+        $beer = Beer::findOrFail($request->beer_id);
+        $user = auth()->user();
         
-        $user = Auth::user();
-        $beerId = $request->beer_id;
-        
-        // Si ya está en favoritos, quitarlo; si no, añadirlo
-        if ($user->favoritedBeers()->where('beer_id', $beerId)->exists()) {
-            $user->favoritedBeers()->detach($beerId);
-            $message = 'Cerveza eliminada de favoritos.';
+        // Si ya es favorito, eliminar; si no, añadir
+        if ($user->favoritedBeers()->where('beer_id', $beer->id)->exists()) {
+            $user->favoritedBeers()->detach($beer->id);
+            $isFavorited = false;
         } else {
-            $user->favoritedBeers()->attach($beerId);
-            $message = 'Cerveza añadida a favoritos.';
+            $user->favoritedBeers()->attach($beer->id);
+            $isFavorited = true;
         }
         
-        // Si es una solicitud AJAX, devolver respuesta JSON
         if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => $message,
-                'isFavorited' => $user->favoritedBeers()->where('beer_id', $beerId)->exists()
-            ]);
+            return response()->json(['isFavorited' => $isFavorited]);
         }
         
-        return back()->with('success', $message);
+        return back()->with('success', $isFavorited ? 'Cerveza añadida a favoritos' : 'Cerveza eliminada de favoritos');
     }
     
     /**

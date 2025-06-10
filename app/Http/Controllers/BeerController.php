@@ -15,56 +15,83 @@ class BeerController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Beer::query();
+        $query = Beer::with(['brewery', 'category']);
         
-        // Filtrado por búsqueda
-        if ($request->has('search') && $request->search) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
+        // Búsqueda por nombre
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
         }
         
-        // Filtrado por categoría
-        if ($request->has('category') && $request->category) {
-            $query->where('beer_category_id', $request->category);
-        }
-        
-        // Filtrado por cervecería
-        if ($request->has('brewery') && $request->brewery) {
-            $query->where('brewery_id', $request->brewery);
-        }
-        
-        // Filtrado por ABV (alcohol by volume)
-        if ($request->has('min_abv') && $request->has('max_abv')) {
-            $query->whereBetween('abv', [$request->min_abv, $request->max_abv]);
-        }
-        
-        // Ordenar resultados
-        if ($request->has('sort')) {
-            switch ($request->sort) {
-                case 'name_asc':
-                    $query->orderBy('name', 'asc');
-                    break;
-                case 'name_desc':
-                    $query->orderBy('name', 'desc');
-                    break;
-                case 'abv_asc':
-                    $query->orderBy('abv', 'asc');
-                    break;
-                case 'abv_desc':
-                    $query->orderBy('abv', 'desc');
-                    break;
-                default:
-                    $query->orderBy('created_at', 'desc');
+        // Filtrar por categoría usando nombre
+        if ($request->has('category')) {
+            $categoryName = $request->category;
+            
+            if (is_numeric($categoryName)) {
+                $query->where('beer_category_id', $categoryName);
+            } else {
+                $query->whereHas('category', function($q) use ($categoryName) {
+                    $q->where('name', 'like', "%{$categoryName}%");
+                });
             }
-        } else {
-            $query->orderBy('created_at', 'desc');
         }
         
-        // Obtener resultados paginados
-        $beers = $query->with(['brewery', 'category'])->paginate(12);
+        // Filtro por cervecería
+        if ($request->filled('brewery')) {
+            $breweryParam = $request->brewery;
+            
+            // Si es numérico, tratar como ID
+            if (is_numeric($breweryParam)) {
+                $query->where('brewery_id', $breweryParam);
+            } 
+            // Si no es numérico, buscar por nombre
+            else {
+                $query->whereHas('brewery', function($q) use ($breweryParam) {
+                    $q->where('name', 'like', "%{$breweryParam}%");
+                });
+            }
+        }
+        
+        // Filtro por ABV (graduación alcohólica)
+        if ($request->filled('abv')) {
+            switch ($request->abv) {
+                case 'light':
+                    $query->where('abv', '<', 4);
+                    break;
+                case 'medium':
+                    $query->whereBetween('abv', [4, 6]);
+                    break;
+                case 'strong':
+                    $query->whereBetween('abv', [6, 8]);
+                    break;
+                case 'very-strong':
+                    $query->where('abv', '>', 8);
+                    break;
+            }
+        }
+        
+        // Filtro por IBU (amargor)
+        if ($request->filled('ibu')) {
+            switch ($request->ibu) {
+                case 'low':
+                    $query->where('ibu', '<', 20);
+                    break;
+                case 'medium':
+                    $query->whereBetween('ibu', [20, 40]);
+                    break;
+                case 'high':
+                    $query->whereBetween('ibu', [40, 60]);
+                    break;
+                case 'very-high':
+                    $query->where('ibu', '>', 60);
+                    break;
+            }
+        }
+        
+        // Cargar relaciones necesarias y paginar resultados
+        $beers = $query->paginate(12)
+                       ->withQueryString(); // Importante para mantener los parámetros de filtro en la paginación
         
         // Obtener todas las categorías para el filtro
         $categories = BeerCategory::all();
@@ -111,23 +138,32 @@ class BeerController extends Controller
     }
 
     /**
-     * Mostrar una cerveza específica
+     * Mostrar detalles de una cerveza
      */
-    public function show(Beer $beer)
+    public function show($beerParam)
     {
-        $beer->load(['brewery', 'category']);
+        // Intentar encontrar por ID (para mantener compatibilidad)
+        if (is_numeric($beerParam)) {
+            $beer = Beer::find($beerParam);
+            if ($beer) {
+                return view('beers.show', compact('beer'));
+            }
+        }
         
-        // Opcional: Cargar cervezas similares (misma categoría o cervecería)
-        $similarBeers = Beer::where('id', '!=', $beer->id)
-                        ->where(function($q) use ($beer) {
-                            $q->where('beer_category_id', $beer->beer_category_id)
-                              ->orWhere('brewery_id', $beer->brewery_id);
-                        })
-                        ->with(['brewery', 'category'])
-                        ->limit(4)
-                        ->get();
+        // Intentar encontrar por nombre exacto
+        $beer = Beer::where('name', $beerParam)->first();
+        if (!$beer) {
+            // Intentar encontrar por slug
+            $beer = Beer::all()->first(function($b) use ($beerParam) {
+                return \Str::slug($b->name) === $beerParam;
+            });
+        }
         
-        return view('beers.show', compact('beer', 'similarBeers'));
+        if (!$beer) {
+            abort(404, 'Cerveza no encontrada');
+        }
+        
+        return view('beers.show', compact('beer'));
     }
 
     /**
